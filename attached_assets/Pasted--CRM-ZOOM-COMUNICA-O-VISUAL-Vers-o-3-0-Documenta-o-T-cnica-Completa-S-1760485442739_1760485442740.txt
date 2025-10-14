@@ -1,0 +1,354 @@
+# 🟡 CRM ZOOM COMUNICAÇÃO VISUAL  
+**Versão 3.0 — Documentação Técnica Completa**
+
+---
+
+## 🏢 SOBRE O PROJETO
+
+O **CRM Zoom Comunicação Visual** é um sistema personalizado para controle de **clientes, orçamentos, pipeline de vendas e produção**, inspirado no **Agendor**, mas adaptado para o setor de **comunicação visual física** (fachadas, letreiros, adesivos, banners, etc).
+
+O sistema será desenvolvido em **JavaScript (Node.js + Frontend dinâmico)**, podendo usar **bibliotecas leves** (Bootstrap, Alpine.js, SortableJS, etc.) para facilitar a construção visual e a interação com o usuário.
+
+---
+
+## 🎯 OBJETIVOS
+
+1. Centralizar o gerenciamento de **clientes, negócios e produção**.  
+2. Gerar **orçamentos dinâmicos** com múltiplos itens e cálculos automáticos.  
+3. Controlar o **funil de vendas visual (Kanban)** estilo Agendor.  
+4. Permitir **envio direto de orçamentos via WhatsApp e PDF**.  
+5. Gerar **relatórios e indicadores** de desempenho da equipe e produtos.
+
+---
+
+## ⚙️ MÓDULOS DO SISTEMA
+
+### 🧩 1. MÓDULO DE CLIENTES
+
+**Funções principais:**
+- Cadastro completo de clientes (PF e PJ)
+- Histórico de orçamentos e negócios
+- Busca e filtros por cidade, nome ou empresa
+- Envio rápido de mensagens via WhatsApp (`https://wa.me/`)
+
+**Campos principais:**
+- Nome / Empresa  
+- Telefone / WhatsApp  
+- E-mail  
+- Cidade / Estado  
+- Observações  
+
+---
+
+### 💼 2. MÓDULO DE NEGÓCIOS (PIPELINE)
+
+**Funil de vendas com etapas configuráveis:**
+
+1. Contato  
+2. Coleta de informações  
+3. Qualificação  
+4. Cálculo do custo  
+5. Envio do orçamento  
+6. Follow-up  
+7. Fechamento  
+
+**Funcionalidades:**
+- Cards arrastáveis entre colunas (SortableJS)
+- Totais automáticos por etapa e valor geral do funil
+- Filtros e busca por vendedor, valor ou status
+- Alerta automático de follow-up (“3 dias sem resposta”)
+
+**Exemplo visual (Kanban estilo Agendor):**
+| Contato | Coleta | Cálculo | Envio | Follow-up | Fechamento |
+
+yaml
+Copiar código
+
+---
+
+### 🧾 3. MÓDULO DE ORÇAMENTOS (DINÂMICO)
+
+O orçamento é composto por **itens (containers)** adicionados dinamicamente.
+
+#### 🧱 Estrutura visual:
+Cliente: Clínica Cotia
+Telefone: (11) 97240-1995
+
+[+] Adicionar Item
+
+🟨 Item 1
+Produto: [ Painel em ACM ▼ ]
+Tipo: [ M² | Valor fixo | Serviço ▼ ]
+Largura (m): []
+Altura (m): []
+Valor por m²: []
+Subtotal: []
+[x] Remover Item
+
+markdown
+Copiar código
+
+#### 🔁 Comportamento:
+- Cada container representa um **item do orçamento**.
+- O botão “Adicionar Item” cria um novo container.  
+- O botão “Remover” apaga apenas aquele item.  
+- O campo “Tipo” altera os campos exibidos:
+  - **M²:** mostra largura, altura e valor/m² → cálculo automático  
+  - **Valor fixo:** mostra campo de valor direto  
+  - **Serviço:** permite inserir valor e descrição livre
+
+#### ⚙️ Cálculos automáticos:
+```js
+function calcularSubtotal(tipo, largura, altura, valorM2, valorFixo) {
+  if (tipo === "m2") return (largura * altura * valorM2).toFixed(2);
+  if (tipo === "fixo" || tipo === "servico") return valorFixo.toFixed(2);
+}
+Total geral:
+
+js
+Copiar código
+const totalGeral = itens.reduce((acc, item) => acc + item.subtotal, 0);
+🧠 Integração CRM:
+O sistema puxa automaticamente os dados do cliente selecionado.
+
+Preenche o cabeçalho do orçamento com nome, telefone e endereço.
+
+📄 Ações:
+💾 Salvar orçamento
+
+📄 Gerar PDF (com logo Zoom)
+
+📱 Enviar via WhatsApp
+
+🧰 4. MÓDULO DE PRODUTOS
+Campos:
+
+Nome
+
+Descrição
+
+Valor por m²
+
+Tipo (M² / Fixo / Serviço)
+
+Material / Categoria
+
+Tempo médio de produção
+
+Funções:
+
+CRUD completo
+
+Atualização rápida de preços
+
+Filtros por categoria
+
+📞 5. MÓDULO DE CONTATOS E VISITAS
+Funções:
+
+Registrar visitas e ligações
+
+Atribuir vendedor responsável
+
+Agendar follow-ups
+
+Exibir no calendário (JS Calendar)
+
+Campos:
+
+Cliente vinculado
+
+Data / hora
+
+Motivo
+
+Observações
+
+🏭 6. MÓDULO DE PRODUÇÃO
+Etapas da produção:
+
+Aguardando início
+
+Em produção
+
+Instalação
+
+Concluído
+
+Funções:
+
+Exibir progresso em Kanban
+
+Atribuir responsáveis
+
+Gerar alertas de prazo
+
+Atualizar status visualmente
+
+📊 7. MÓDULO DE RELATÓRIOS
+Indicadores:
+
+Total de orçamentos enviados / aprovados
+
+Faturamento total
+
+Taxa de conversão (%)
+
+Produtos mais vendidos
+
+Vendedores mais produtivos
+
+Visualização:
+
+Gráficos (Chart.js)
+
+Exportação em PDF (jsPDF)
+
+💬 8. MÓDULO DE MENSAGENS AUTOMÁTICAS
+Modelos padrão:
+
+Saudação inicial:
+
+“Olá, tudo bem? Meu nome é João Pedro, sou representante comercial da Zoom Comunicação Visual. Qual produto ou serviço você precisa?”
+
+Orçamento enviado:
+
+“Segue o orçamento conforme combinado! Qualquer dúvida fico à disposição 👍”
+
+Recuperação de contato:
+
+“Oi! Só passando pra ver se conseguiu ver o orçamento que enviei 🙂”
+
+Funções:
+
+Editar mensagens padrão
+
+Enviar via WhatsApp com placeholders dinâmicos
+
+Usar API Waha / Evolution para automação
+
+🧩 TECNOLOGIAS RECOMENDADAS
+Área	Tecnologia	Função
+Frontend	HTML5 / CSS3 / JS (ES6)	Base do sistema
+Estilo visual	TailwindCSS / Bootstrap 5	Layout moderno e responsivo
+Interatividade leve	Alpine.js / HTMX	Reatividade sem frameworks pesados
+Drag & Drop	SortableJS	Funil de vendas estilo Agendor
+PDF	jsPDF	Geração de PDFs de orçamentos
+Gráficos	Chart.js	Relatórios e dashboards
+Backend	Node.js + Express	API e lógica de negócios
+Banco de Dados	SQLite / Supabase	Armazenamento de dados
+Autenticação	JWT	Controle de login e sessão
+E-mail	Nodemailer	Envio de orçamentos e notificações
+WhatsApp	Waha / Evolution API	Envio de mensagens comerciais
+Hospedagem	Replit / Render / Railway	Deploy e ambiente online
+
+📁 ESTRUTURA DE PASTAS
+pgsql
+Copiar código
+zoom-crm/
+│
+├── backend/
+│   ├── server.js
+│   ├── routes/
+│   │   ├── clientes.js
+│   │   ├── produtos.js
+│   │   ├── orcamentos.js
+│   │   ├── negocios.js
+│   │   └── producao.js
+│   ├── db/
+│   │   └── database.sqlite
+│   └── utils/
+│       └── calcOrcamento.js
+│
+├── frontend/
+│   ├── index.html
+│   ├── pages/
+│   │   ├── dashboard.html
+│   │   ├── clientes.html
+│   │   ├── orcamentos.html
+│   │   ├── negocios.html
+│   │   └── producao.html
+│   ├── css/
+│   │   └── style.css
+│   ├── js/
+│   │   ├── main.js
+│   │   ├── clientes.js
+│   │   ├── orcamentos.js
+│   │   ├── negocios.js
+│   │   └── producao.js
+│   └── img/
+│       └── logo-zoom.png
+│
+├── .env
+├── package.json
+└── README.md
+🧠 FLUXO DE FUNCIONAMENTO
+Usuário faz login.
+
+Acessa o Dashboard com resumo de negócios e produção.
+
+Cadastra cliente ou seleciona existente.
+
+Cria orçamento → adiciona itens dinâmicos → total automático.
+
+Gera PDF e envia via WhatsApp.
+
+O orçamento vira negócio ativo no pipeline.
+
+Quando aprovado → vai para produção.
+
+Ao concluir → é arquivado e registrado em relatórios.
+
+🎨 DESIGN VISUAL
+Elemento	Cor / Estilo
+Fundo geral	#F7F8FB
+Cards e colunas	#F1F2FB
+Botões principais	Amarelo Zoom (#FFD200)
+Tipografia	Poppins / Inter
+Ícones	Font Awesome
+Layout	Grid + Flexbox (responsivo)
+
+🔒 SEGURANÇA
+Login com JWT
+
+Criptografia de senhas (bcrypt)
+
+Controle de acesso por perfil (Admin / Vendas / Produção)
+
+Backups automáticos
+
+💡 DIFERENCIAIS ZOOM
+✅ Interface estilo Agendor
+✅ Cálculo automático por m²
+✅ Containers dinâmicos de orçamento
+✅ Pipeline de vendas com drag & drop
+✅ Envio automático via WhatsApp
+✅ Relatórios e gráficos de desempenho
+✅ Design responsivo e leve
+
+🧾 EXEMPLO DE JSON DE ORÇAMENTO
+json
+Copiar código
+{
+  "id": 101,
+  "cliente_id": 12,
+  "itens": [
+    {
+      "produto": "Painel em Lona",
+      "tipo": "m2",
+      "largura": 2.35,
+      "altura": 0.94,
+      "valor_m2": 150,
+      "subtotal": 331.95
+    },
+    {
+      "produto": "Serviço de Instalação",
+      "tipo": "servico",
+      "valor": 120,
+      "subtotal": 120
+    }
+  ],
+  "valor_total": 451.95,
+  "status": "enviado",
+  "prazo_entrega": "4 dias úteis"
+}
