@@ -1,61 +1,82 @@
+import { useState } from "react";
 import { ProductionKanban } from "@/components/production-kanban";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { Production, Deal, Client } from "@shared/schema";
+
+interface ProductionWithDetails {
+  id: string;
+  clientName: string;
+  product: string;
+  status: string;
+  assignedTo: string;
+  deadline: string;
+}
 
 export default function Producao() {
-  const mockItems = [
-    {
-      id: "1",
-      clientName: "Clínica Cotia",
-      product: "Painel em ACM - 2,35m x 0,94m",
-      status: "awaiting",
-      assignedTo: "João Silva",
-      deadline: "15/10/2025",
+  const { data: productions = [], isLoading } = useQuery<Production[]>({
+    queryKey: ["/api/production"],
+  });
+
+  const { data: deals = [] } = useQuery<Deal[]>({
+    queryKey: ["/api/deals"],
+  });
+
+  const { data: clients = [] } = useQuery<Client[]>({
+    queryKey: ["/api/clients"],
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      await apiRequest("PATCH", `/api/production/${id}`, { status });
     },
-    {
-      id: "2",
-      clientName: "Restaurante Bella",
-      product: "Fachada completa - ACM + Luminoso",
-      status: "production",
-      assignedTo: "Maria Santos",
-      deadline: "20/10/2025",
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/production"] });
     },
-    {
-      id: "3",
-      clientName: "Padaria Central",
-      product: "Letreiro luminoso em acrílico",
-      status: "installation",
-      assignedTo: "Carlos Eduardo",
-      deadline: "12/10/2025",
-    },
-    {
-      id: "4",
-      clientName: "Farmácia São João",
-      product: "Totem luminoso 3m altura",
-      status: "completed",
-      assignedTo: "João Silva",
-      deadline: "10/10/2025",
-    },
-    {
-      id: "5",
-      clientName: "Mercado Silva",
-      product: "Banner promocional 4m x 2m",
-      status: "production",
-      assignedTo: "Ana Paula",
-      deadline: "14/10/2025",
-    },
-  ];
+  });
+
+  const formattedItems: ProductionWithDetails[] = productions.map(prod => {
+    const deal = deals.find(d => d.id === prod.dealId);
+    const client = clients.find(c => c.id === deal?.clientId);
+    return {
+      id: prod.id,
+      clientName: client?.name || "Cliente",
+      product: deal?.title || "Produto",
+      status: prod.status,
+      assignedTo: prod.assignedTo || deal?.assignedTo || "",
+      deadline: prod.deadline ? new Date(prod.deadline).toLocaleDateString('pt-BR') : "",
+    };
+  });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="font-serif text-3xl font-bold">Produção</h1>
+          <p className="text-muted-foreground">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-serif text-3xl font-bold">Produção</h1>
-        <p className="text-muted-foreground">Acompanhe o status de produção e instalação</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-serif text-3xl font-bold">Produção</h1>
+          <p className="text-muted-foreground">Acompanhe o status de produção e instalação</p>
+        </div>
+        <Button data-testid="button-add-production">
+          <Plus className="h-4 w-4 mr-2" />
+          Novo Item
+        </Button>
       </div>
 
       <ProductionKanban
-        items={mockItems}
-        onStatusChange={(id, status) =>
-          console.log(`Change item ${id} to status ${status}`)
-        }
+        items={formattedItems}
+        onStatusChange={(id, status) => updateStatusMutation.mutate({ id, status })}
       />
     </div>
   );

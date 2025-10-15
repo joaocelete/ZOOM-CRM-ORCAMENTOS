@@ -1,13 +1,16 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import type { Client } from "@shared/schema";
+import { insertClientSchema, type Client, type InsertClient } from "@shared/schema";
 
 interface ClientDialogProps {
   open: boolean;
@@ -20,19 +23,22 @@ export function ClientDialog({ open, onOpenChange, client, mode }: ClientDialogP
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const [formData, setFormData] = useState({
-    name: "",
-    company: "",
-    phone: "",
-    email: "",
-    city: "",
-    state: "",
-    notes: "",
+  const form = useForm<InsertClient>({
+    resolver: zodResolver(insertClientSchema),
+    defaultValues: {
+      name: "",
+      company: "",
+      phone: "",
+      email: "",
+      city: "",
+      state: "",
+      notes: "",
+    },
   });
 
   useEffect(() => {
     if (client && mode === "edit") {
-      setFormData({
+      form.reset({
         name: client.name || "",
         company: client.company || "",
         phone: client.phone || "",
@@ -42,7 +48,7 @@ export function ClientDialog({ open, onOpenChange, client, mode }: ClientDialogP
         notes: client.notes || "",
       });
     } else {
-      setFormData({
+      form.reset({
         name: "",
         company: "",
         phone: "",
@@ -52,10 +58,10 @@ export function ClientDialog({ open, onOpenChange, client, mode }: ClientDialogP
         notes: "",
       });
     }
-  }, [client, mode, open]);
+  }, [client, mode, open, form]);
 
   const createMutation = useMutation({
-    mutationFn: async (data: typeof formData) => {
+    mutationFn: async (data: InsertClient) => {
       return await apiRequest("POST", "/api/clients", data);
     },
     onSuccess: () => {
@@ -76,7 +82,7 @@ export function ClientDialog({ open, onOpenChange, client, mode }: ClientDialogP
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (data: typeof formData) => {
+    mutationFn: async (data: InsertClient) => {
       return await apiRequest("PATCH", `/api/clients/${client?.id}`, data);
     },
     onSuccess: () => {
@@ -96,21 +102,11 @@ export function ClientDialog({ open, onOpenChange, client, mode }: ClientDialogP
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name || !formData.phone) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Nome e telefone são obrigatórios.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const onSubmit = (data: InsertClient) => {
     if (mode === "edit") {
-      updateMutation.mutate(formData);
+      updateMutation.mutate(data);
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate(data);
     }
   };
 
@@ -124,103 +120,159 @@ export function ClientDialog({ open, onOpenChange, client, mode }: ClientDialogP
             {mode === "edit" ? "Editar Cliente" : "Novo Cliente"}
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-2 gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome *</Label>
-              <Input
-                id="name"
-                data-testid="input-client-name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Nome completo"
-                required
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <div className="grid grid-cols-2 gap-4 py-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome *</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        data-testid="input-client-name"
+                        placeholder="Nome completo"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="company">Empresa</Label>
-              <Input
-                id="company"
-                data-testid="input-client-company"
-                value={formData.company}
-                onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                placeholder="Nome da empresa"
+              <FormField
+                control={form.control}
+                name="company"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Empresa</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value || ""}
+                        data-testid="input-client-company"
+                        placeholder="Nome da empresa"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Telefone *</Label>
-              <Input
-                id="phone"
-                data-testid="input-client-phone"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="(11) 99999-9999"
-                required
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telefone *</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        data-testid="input-client-phone"
+                        placeholder="(11) 99999-9999"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input
-                id="email"
-                data-testid="input-client-email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="email@exemplo.com"
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>E-mail</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value || ""}
+                        type="email"
+                        data-testid="input-client-email"
+                        placeholder="email@exemplo.com"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="city">Cidade</Label>
-              <Input
-                id="city"
-                data-testid="input-client-city"
-                value={formData.city}
-                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                placeholder="São Paulo"
+              <FormField
+                control={form.control}
+                name="city"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Cidade</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value || ""}
+                        data-testid="input-client-city"
+                        placeholder="São Paulo"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="state">Estado</Label>
-              <Input
-                id="state"
-                data-testid="input-client-state"
-                value={formData.state}
-                onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                placeholder="SP"
-                maxLength={2}
+              <FormField
+                control={form.control}
+                name="state"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Estado</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value || ""}
+                        data-testid="input-client-state"
+                        placeholder="SP"
+                        maxLength={2}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
+              <div className="col-span-2">
+                <FormField
+                  control={form.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Observações</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          value={field.value || ""}
+                          data-testid="input-client-notes"
+                          placeholder="Informações adicionais sobre o cliente..."
+                          rows={3}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="notes">Observações</Label>
-              <Textarea
-                id="notes"
-                data-testid="input-client-notes"
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="Informações adicionais sobre o cliente..."
-                rows={3}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}
-              data-testid="button-cancel-client"
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              disabled={isLoading}
-              data-testid="button-submit-client"
-            >
-              {isLoading ? "Salvando..." : mode === "edit" ? "Atualizar" : "Criar Cliente"}
-            </Button>
-          </DialogFooter>
-        </form>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isLoading}
+                data-testid="button-cancel-client"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={isLoading}
+                data-testid="button-submit-client"
+              >
+                {isLoading ? "Salvando..." : mode === "edit" ? "Atualizar" : "Criar Cliente"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
