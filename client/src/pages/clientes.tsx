@@ -1,9 +1,15 @@
+import { useState } from "react";
 import { ClientList } from "@/components/client-list";
+import { ClientDialog } from "@/components/client-dialog";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Client } from "@shared/schema";
 
 export default function Clientes() {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | undefined>();
+  const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
+
   const { data: clients = [], isLoading } = useQuery<Client[]>({
     queryKey: ["/api/clients"],
   });
@@ -16,6 +22,18 @@ export default function Clientes() {
       queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
     },
   });
+
+  const handleAdd = () => {
+    setSelectedClient(undefined);
+    setDialogMode("add");
+    setDialogOpen(true);
+  };
+
+  const handleEdit = (client: Client) => {
+    setSelectedClient(client);
+    setDialogMode("edit");
+    setDialogOpen(true);
+  };
 
   if (isLoading) {
     return (
@@ -37,9 +55,16 @@ export default function Clientes() {
 
       <ClientList
         clients={clients}
-        onEdit={(client) => console.log("Edit client:", client)}
+        onEdit={handleEdit}
         onDelete={(id) => deleteMutation.mutate(id)}
-        onAdd={() => console.log("Add new client")}
+        onAdd={handleAdd}
+      />
+
+      <ClientDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        client={selectedClient}
+        mode={dialogMode}
       />
     </div>
   );
