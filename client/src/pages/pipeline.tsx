@@ -1,4 +1,5 @@
 import { KanbanBoard } from "@/components/kanban-board";
+import { DealDialog } from "@/components/deal-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, Filter, LayoutGrid } from "lucide-react";
@@ -18,6 +19,9 @@ interface DealWithClient {
 
 export default function Pipeline() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedDeal, setSelectedDeal] = useState<Deal | undefined>();
+  const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
 
   const { data: deals = [], isLoading } = useQuery<Deal[]>({
     queryKey: ["/api/deals"],
@@ -56,6 +60,21 @@ export default function Pipeline() {
     deal.clientName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleAdd = () => {
+    setSelectedDeal(undefined);
+    setDialogMode("add");
+    setDialogOpen(true);
+  };
+
+  const handleEdit = (dealId: string) => {
+    const deal = deals.find(d => d.id === dealId);
+    if (deal) {
+      setSelectedDeal(deal);
+      setDialogMode("edit");
+      setDialogOpen(true);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -76,7 +95,7 @@ export default function Pipeline() {
             Gerencie seus negócios através do funil de vendas
           </p>
         </div>
-        <Button data-testid="button-add-deal">
+        <Button onClick={handleAdd} data-testid="button-add-deal">
           <Plus className="h-4 w-4 mr-2" />
           Adicionar negócio
         </Button>
@@ -104,13 +123,20 @@ export default function Pipeline() {
       <div className="rounded-lg border bg-card p-4">
         <KanbanBoard
           deals={filteredDeals}
-          onDealClick={(deal) => console.log("View deal:", deal)}
+          onDealClick={(deal) => handleEdit(deal.id)}
           onDeleteDeal={(id) => deleteMutation.mutate(id)}
           onMoveCard={(dealId: string, newStage: string) => {
             updateStageMutation.mutate({ id: dealId, stage: newStage });
           }}
         />
       </div>
+
+      <DealDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        deal={selectedDeal}
+        mode={dialogMode}
+      />
     </div>
   );
 }
