@@ -188,7 +188,19 @@ export class DatabaseStorage implements IStorage {
 
   // Deals
   async getDeals(): Promise<Deal[]> {
-    return await db.select().from(deals).orderBy(desc(deals.createdAt));
+    const results = await db
+      .select({
+        deal: deals,
+        client: clients,
+      })
+      .from(deals)
+      .leftJoin(clients, eq(deals.clientId, clients.id))
+      .orderBy(desc(deals.createdAt));
+    
+    return results.map(r => ({
+      ...r.deal,
+      assignedTo: r.client?.name || r.client?.company || r.deal.assignedTo,
+    }));
   }
 
   async getDeal(id: string): Promise<Deal | undefined> {

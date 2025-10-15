@@ -2,74 +2,70 @@ import { KanbanBoard } from "@/components/kanban-board";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, Filter, LayoutGrid } from "lucide-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { Deal } from "@shared/schema";
+import { useState } from "react";
+
+interface DealWithClient {
+  id: string;
+  title: string;
+  clientName: string;
+  value: number;
+  stage: string;
+  updatedAt: string;
+}
 
 export default function Pipeline() {
-  const mockDeals = [
-    {
-      id: "1",
-      title: "Painel em ACM 3x2m",
-      clientName: "Clínica Cotia",
-      value: 2500.0,
-      stage: "contact",
-      updatedAt: "2h",
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const { data: deals = [], isLoading } = useQuery<Deal[]>({
+    queryKey: ["/api/deals"],
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/deals/${id}`);
     },
-    {
-      id: "2",
-      title: "Fachada completa + luminoso",
-      clientName: "Restaurante Bella",
-      value: 8500.0,
-      stage: "contact",
-      updatedAt: "1d",
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
     },
-    {
-      id: "3",
-      title: "Letreiro luminoso acrílico",
-      clientName: "Padaria Central",
-      value: 3200.0,
-      stage: "collection",
-      updatedAt: "3d",
+  });
+
+  const updateStageMutation = useMutation({
+    mutationFn: async ({ id, stage }: { id: string; stage: string }) => {
+      await apiRequest("PATCH", `/api/deals/${id}`, { stage });
     },
-    {
-      id: "4",
-      title: "Totem 3m + iluminação",
-      clientName: "Farmácia São João",
-      value: 4200.0,
-      stage: "collection",
-      updatedAt: "3h",
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
     },
-    {
-      id: "5",
-      title: "Banner promocional 4x2m",
-      clientName: "Mercado Silva",
-      value: 680.0,
-      stage: "collection",
-      updatedAt: "1d",
-    },
-    {
-      id: "6",
-      title: "Adesivo vitrine perfurado",
-      clientName: "Loja MultiMarcas",
-      value: 850.0,
-      stage: "costing",
-      updatedAt: "5d",
-    },
-    {
-      id: "7",
-      title: "Painel em Lona comunicação visual",
-      clientName: "Erick News Gord",
-      value: 3837.0,
-      stage: "sent",
-      updatedAt: "2d",
-    },
-    {
-      id: "8",
-      title: "Adesivo recortado BragaSom",
-      clientName: "Braga BragaSom",
-      value: 450.0,
-      stage: "followup",
-      updatedAt: "7d",
-    },
-  ];
+  });
+
+  // Transform deals for kanban display
+  const formattedDeals: DealWithClient[] = deals.map(deal => ({
+    id: deal.id,
+    title: deal.title,
+    clientName: deal.assignedTo || "Cliente",
+    value: parseFloat(deal.value as any) || 0,
+    stage: deal.stage,
+    updatedAt: deal.updatedAt ? new Date(deal.updatedAt).toLocaleDateString('pt-BR') : "Hoje",
+  }));
+
+  const filteredDeals = formattedDeals.filter(deal =>
+    deal.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    deal.clientName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div>
+          <h1 className="font-serif text-2xl font-bold">Pipeline de Vendas</h1>
+          <p className="text-sm text-muted-foreground mt-1">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -92,6 +88,8 @@ export default function Pipeline() {
           <Input
             placeholder="Buscar negócios..."
             className="pl-9"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             data-testid="input-search-deals"
           />
         </div>
@@ -105,9 +103,12 @@ export default function Pipeline() {
 
       <div className="rounded-lg border bg-card p-4">
         <KanbanBoard
-          deals={mockDeals}
+          deals={filteredDeals}
           onDealClick={(deal) => console.log("View deal:", deal)}
-          onDeleteDeal={(id) => console.log("Delete deal:", id)}
+          onDeleteDeal={(id) => deleteMutation.mutate(id)}
+          onMoveCard={(dealId: string, newStage: string) => {
+            updateStageMutation.mutate({ id: dealId, stage: newStage });
+          }}
         />
       </div>
     </div>

@@ -46,10 +46,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/clients/:id", async (req, res) => {
     try {
-      const client = await storage.updateClient(req.params.id, req.body);
+      const existing = await storage.getClient(req.params.id);
+      if (!existing) {
+        return res.status(404).json({ error: "Client not found" });
+      }
+      
+      const data = insertClientSchema.partial().parse(req.body);
+      const client = await storage.updateClient(req.params.id, data);
       res.json(client);
-    } catch (error) {
-      res.status(400).json({ error: "Failed to update client" });
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: "Invalid client data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to update client" });
     }
   });
 
@@ -96,10 +105,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/products/:id", async (req, res) => {
     try {
-      const product = await storage.updateProduct(req.params.id, req.body);
+      const existing = await storage.getProduct(req.params.id);
+      if (!existing) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+      
+      const data = insertProductSchema.partial().parse(req.body);
+      const product = await storage.updateProduct(req.params.id, data);
       res.json(product);
-    } catch (error) {
-      res.status(400).json({ error: "Failed to update product" });
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: "Invalid product data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to update product" });
     }
   });
 
@@ -147,30 +165,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { items, ...budgetData } = req.body;
       const budgetParsed = insertBudgetSchema.parse(budgetData);
+      
+      // Validate all items first
+      const validatedItems = items && Array.isArray(items) 
+        ? items.map(item => insertBudgetItemSchema.parse(item))
+        : [];
+      
       const budget = await storage.createBudget(budgetParsed);
       
-      if (items && Array.isArray(items)) {
-        for (const item of items) {
-          const itemData = insertBudgetItemSchema.parse({
-            ...item,
-            budgetId: budget.id
-          });
-          await storage.createBudgetItem(itemData);
-        }
+      // Create all items with the budget ID
+      for (const item of validatedItems) {
+        await storage.createBudgetItem({
+          ...item,
+          budgetId: budget.id
+        });
       }
       
       res.status(201).json(budget);
-    } catch (error) {
-      res.status(400).json({ error: "Invalid budget data" });
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: "Invalid budget data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create budget" });
     }
   });
 
   app.patch("/api/budgets/:id", async (req, res) => {
     try {
-      const budget = await storage.updateBudget(req.params.id, req.body);
+      const existing = await storage.getBudget(req.params.id);
+      if (!existing) {
+        return res.status(404).json({ error: "Budget not found" });
+      }
+      
+      const data = insertBudgetSchema.partial().parse(req.body);
+      const budget = await storage.updateBudget(req.params.id, data);
       res.json(budget);
-    } catch (error) {
-      res.status(400).json({ error: "Failed to update budget" });
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: "Invalid budget data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to update budget" });
     }
   });
 
@@ -218,10 +252,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/deals/:id", async (req, res) => {
     try {
-      const deal = await storage.updateDeal(req.params.id, req.body);
+      const existing = await storage.getDeal(req.params.id);
+      if (!existing) {
+        return res.status(404).json({ error: "Deal not found" });
+      }
+      
+      const data = insertDealSchema.partial().parse(req.body);
+      const deal = await storage.updateDeal(req.params.id, data);
       res.json(deal);
-    } catch (error) {
-      res.status(400).json({ error: "Failed to update deal" });
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: "Invalid deal data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to update deal" });
     }
   });
 
@@ -268,10 +311,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/production/:id", async (req, res) => {
     try {
-      const production = await storage.updateProduction(req.params.id, req.body);
+      const existing = await storage.getProduction(req.params.id);
+      if (!existing) {
+        return res.status(404).json({ error: "Production item not found" });
+      }
+      
+      const data = insertProductionSchema.partial().parse(req.body);
+      const production = await storage.updateProduction(req.params.id, data);
       res.json(production);
-    } catch (error) {
-      res.status(400).json({ error: "Failed to update production item" });
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: "Invalid production data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to update production item" });
     }
   });
 

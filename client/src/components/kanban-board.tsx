@@ -32,9 +32,10 @@ interface KanbanBoardProps {
   deals: Deal[];
   onDealClick?: (deal: Deal) => void;
   onDeleteDeal?: (id: string) => void;
+  onMoveCard?: (dealId: string, newStage: string) => void;
 }
 
-export function KanbanBoard({ deals, onDealClick, onDeleteDeal }: KanbanBoardProps) {
+export function KanbanBoard({ deals, onDealClick, onDeleteDeal, onMoveCard }: KanbanBoardProps) {
   const [draggedDeal, setDraggedDeal] = useState<Deal | null>(null);
 
   const getDealsByStage = (stageId: string) => {
@@ -50,8 +51,8 @@ export function KanbanBoard({ deals, onDealClick, onDeleteDeal }: KanbanBoardPro
   };
 
   const handleDrop = (stageId: string) => {
-    if (draggedDeal) {
-      console.log(`Moving deal ${draggedDeal.id} to stage ${stageId}`);
+    if (draggedDeal && draggedDeal.stage !== stageId) {
+      onMoveCard?.(draggedDeal.id, stageId);
       setDraggedDeal(null);
     }
   };
