@@ -337,27 +337,18 @@ export function BudgetCreator({ clients = [], products = [], onSave, onSendWhats
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Produto</Label>
-                  <div className="flex gap-2">
-                    <Select onValueChange={(value) => handleSelectProduct(item.id, value)}>
-                      <SelectTrigger className="flex-1" data-testid={`select-product-${item.id}`}>
-                        <SelectValue placeholder="Selecionar produto..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {products.map(product => (
-                          <SelectItem key={product.id} value={product.id}>
-                            {product.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Input
-                    placeholder="Ou digite o nome"
-                    value={item.productName}
-                    onChange={(e) => updateItem(item.id, { productName: e.target.value })}
-                    data-testid={`input-product-${item.id}`}
-                    className="mt-2"
-                  />
+                  <Select onValueChange={(value) => handleSelectProduct(item.id, value)}>
+                    <SelectTrigger data-testid={`select-product-${item.id}`}>
+                      <SelectValue placeholder="Selecionar produto..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {products.map(product => (
+                        <SelectItem key={product.id} value={product.id}>
+                          {product.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Tipo</Label>
