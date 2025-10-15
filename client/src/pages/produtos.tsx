@@ -1,9 +1,15 @@
+import { useState } from "react";
 import { ProductList } from "@/components/product-list";
+import { ProductDialog } from "@/components/product-dialog";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Product } from "@shared/schema";
 
 export default function Produtos() {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | undefined>();
+  const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
+
   const { data: products = [], isLoading } = useQuery<Product[]>({
     queryKey: ["/api/products"],
   });
@@ -16,6 +22,18 @@ export default function Produtos() {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
     },
   });
+
+  const handleAdd = () => {
+    setSelectedProduct(undefined);
+    setDialogMode("add");
+    setDialogOpen(true);
+  };
+
+  const handleEdit = (product: Product) => {
+    setSelectedProduct(product);
+    setDialogMode("edit");
+    setDialogOpen(true);
+  };
 
   if (isLoading) {
     return (
@@ -37,9 +55,16 @@ export default function Produtos() {
 
       <ProductList
         products={products}
-        onEdit={(product) => console.log("Edit product:", product)}
+        onEdit={handleEdit}
         onDelete={(id) => deleteMutation.mutate(id)}
-        onAdd={() => console.log("Add new product")}
+        onAdd={handleAdd}
+      />
+
+      <ProductDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        product={selectedProduct}
+        mode={dialogMode}
       />
     </div>
   );
