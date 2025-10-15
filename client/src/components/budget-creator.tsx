@@ -79,8 +79,13 @@ export function BudgetCreator({ clients = [], products = [], onSave, onSendWhats
   };
 
   const calculateSubtotal = (item: BudgetItem): number => {
-    if (item.type === "m2" && item.width && item.height && item.pricePerM2) {
-      return item.width * item.height * item.pricePerM2;
+    if (item.type === "m2") {
+      const width = item.width ?? 0;
+      const height = item.height ?? 0;
+      const pricePerM2 = item.pricePerM2 ?? 0;
+      if (width > 0 && height > 0 && pricePerM2 > 0) {
+        return width * height * pricePerM2;
+      }
     }
     if (item.type === "fixed" || item.type === "service") {
       return item.fixedPrice || 0;
