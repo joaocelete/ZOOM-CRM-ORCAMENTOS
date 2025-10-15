@@ -369,7 +369,7 @@ export function BudgetCreator({ clients = [], products = [], onSave, onSendWhats
               </div>
 
               {item.type === "m2" && (
-                <div className="grid gap-3 sm:grid-cols-3">
+                <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Largura (m)</Label>
                     <Input
@@ -388,16 +388,6 @@ export function BudgetCreator({ clients = [], products = [], onSave, onSendWhats
                       value={item.height || ""}
                       onChange={(e) => updateItem(item.id, { height: parseFloat(e.target.value) || 0 })}
                       data-testid={`input-height-${item.id}`}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Valor/m²</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={item.pricePerM2 || ""}
-                      onChange={(e) => updateItem(item.id, { pricePerM2: parseFloat(e.target.value) || 0 })}
-                      data-testid={`input-price-m2-${item.id}`}
                     />
                   </div>
                 </div>
