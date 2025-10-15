@@ -58,7 +58,7 @@ export function KanbanBoard({ deals, onDealClick, onDeleteDeal }: KanbanBoardPro
 
   return (
     <div className="overflow-x-auto pb-4">
-      <div className="flex gap-3 min-w-max px-1">
+      <div className="flex gap-3 min-w-max px-1 h-[calc(100vh-280px)]">
         {stages.map(stage => {
           const stageDeals = getDealsByStage(stage.id);
           const total = getStageTotal(stage.id);
@@ -66,7 +66,7 @@ export function KanbanBoard({ deals, onDealClick, onDeleteDeal }: KanbanBoardPro
           return (
             <div
               key={stage.id}
-              className="w-[280px] shrink-0"
+              className="w-[280px] shrink-0 flex flex-col"
               onDragOver={(e) => e.preventDefault()}
               onDrop={() => handleDrop(stage.id)}
             >
@@ -85,7 +85,7 @@ export function KanbanBoard({ deals, onDealClick, onDeleteDeal }: KanbanBoardPro
                 </p>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 flex-1 overflow-y-auto pr-1">
                 {stageDeals.map(deal => (
                   <Card
                     key={deal.id}
@@ -168,7 +168,7 @@ export function KanbanBoard({ deals, onDealClick, onDeleteDeal }: KanbanBoardPro
                 ))}
                 
                 {stageDeals.length === 0 && (
-                  <div className="flex h-24 items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/20">
+                  <div className="flex h-full min-h-24 items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/20">
                     <p className="text-xs text-muted-foreground">Arraste negócios aqui</p>
                   </div>
                 )}
