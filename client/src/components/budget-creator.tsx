@@ -119,7 +119,15 @@ export function BudgetCreator({ clients = [], products = [], onSave, onSendWhats
 
   const total = items.reduce((sum, item) => sum + item.subtotal, 0);
 
-  const currentClient = selectedClient || (clientData as Client);
+  const getCurrentClient = (): Client | null => {
+    if (selectedClient) return selectedClient;
+    if (clientData.name && clientData.phone) {
+      return clientData as Client;
+    }
+    return null;
+  };
+
+  const currentClient = getCurrentClient();
 
   return (
     <div className="space-y-4">
@@ -444,17 +452,17 @@ export function BudgetCreator({ clients = [], products = [], onSave, onSendWhats
         <CardFooter className="flex gap-3">
           <Button 
             variant="outline" 
-            onClick={() => onSave?.(items, total, currentClient)} 
+            onClick={() => currentClient && onSave?.(items, total, currentClient)} 
             data-testid="button-save-budget"
-            disabled={!clientData.name || !clientData.phone}
+            disabled={!currentClient}
           >
             <FileText className="h-4 w-4 mr-2" />
             Salvar Orçamento
           </Button>
           <Button 
-            onClick={() => onSendWhatsApp?.(items, total, currentClient)} 
+            onClick={() => currentClient && onSendWhatsApp?.(items, total, currentClient)} 
             data-testid="button-send-whatsapp"
-            disabled={!clientData.name || !clientData.phone}
+            disabled={!currentClient}
           >
             <Send className="h-4 w-4 mr-2" />
             Enviar via WhatsApp
