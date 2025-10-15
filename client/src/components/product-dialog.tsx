@@ -109,11 +109,13 @@ export function ProductDialog({ open, onOpenChange, product, mode }: ProductDial
     }
 
     const dataToSend = {
-      ...formData,
-      pricePerM2: formData.pricePerM2 ? formData.pricePerM2 : null,
-      fixedPrice: formData.fixedPrice ? formData.fixedPrice : null,
-      category: formData.category || null,
-      productionTime: formData.productionTime || null,
+      name: formData.name,
+      type: formData.type,
+      description: formData.description || undefined,
+      pricePerM2: formData.pricePerM2 ? formData.pricePerM2 : undefined,
+      fixedPrice: formData.fixedPrice ? formData.fixedPrice : undefined,
+      category: formData.category || undefined,
+      productionTime: formData.productionTime ? parseInt(formData.productionTime) : undefined,
     };
 
     if (mode === "edit") {
