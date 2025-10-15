@@ -36,6 +36,13 @@ export function DealDialog({ open, onOpenChange, deal, mode }: DealDialogProps) 
     notes: "",
     category: "",
     origin: "",
+    serviceDescription: "",
+    quantity: "",
+    dimensions: "",
+    material: "",
+    finishing: "",
+    deliveryDays: "",
+    installationRequired: "",
   });
 
   useEffect(() => {
@@ -50,6 +57,13 @@ export function DealDialog({ open, onOpenChange, deal, mode }: DealDialogProps) 
         notes: "",
         category: "",
         origin: "",
+        serviceDescription: "",
+        quantity: "",
+        dimensions: "",
+        material: "",
+        finishing: "",
+        deliveryDays: "",
+        installationRequired: "",
       });
     } else {
       setFormData({
@@ -62,6 +76,13 @@ export function DealDialog({ open, onOpenChange, deal, mode }: DealDialogProps) 
         notes: "",
         category: "",
         origin: "",
+        serviceDescription: "",
+        quantity: "",
+        dimensions: "",
+        material: "",
+        finishing: "",
+        deliveryDays: "",
+        installationRequired: "",
       });
     }
   }, [deal, mode, open]);
@@ -260,14 +281,137 @@ export function DealDialog({ open, onOpenChange, deal, mode }: DealDialogProps) 
                 </Select>
               </div>
             )}
+          </div>
+
+          <Separator />
+
+          {/* Informações do Serviço */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-muted-foreground">INFORMAÇÕES DO SERVIÇO</h3>
             <div className="space-y-2">
-              <Label htmlFor="notes">Observações</Label>
+              <Label htmlFor="serviceDescription">Descrição do Serviço/Produto</Label>
+              <Textarea
+                id="serviceDescription"
+                data-testid="input-deal-service-description"
+                value={formData.serviceDescription}
+                onChange={(e) => setFormData({ ...formData, serviceDescription: e.target.value })}
+                placeholder="Ex: Banner em lona para fachada de loja com impressão digital UV"
+                rows={2}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="quantity">Quantidade</Label>
+                <Input
+                  id="quantity"
+                  data-testid="input-deal-quantity"
+                  type="number"
+                  value={formData.quantity}
+                  onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                  placeholder="Ex: 1, 2, 10..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="dimensions">Dimensões</Label>
+                <Input
+                  id="dimensions"
+                  data-testid="input-deal-dimensions"
+                  value={formData.dimensions}
+                  onChange={(e) => setFormData({ ...formData, dimensions: e.target.value })}
+                  placeholder="Ex: 3m x 2m, 50cm x 70cm"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="material">Material</Label>
+                <Select
+                  value={formData.material}
+                  onValueChange={(value) => setFormData({ ...formData, material: value })}
+                >
+                  <SelectTrigger data-testid="select-deal-material">
+                    <SelectValue placeholder="Selecione o material" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="lona">Lona</SelectItem>
+                    <SelectItem value="vinil">Vinil</SelectItem>
+                    <SelectItem value="acm">ACM (Alumínio Composto)</SelectItem>
+                    <SelectItem value="acrilico">Acrílico</SelectItem>
+                    <SelectItem value="pvc">PVC</SelectItem>
+                    <SelectItem value="papel">Papel</SelectItem>
+                    <SelectItem value="tecido">Tecido</SelectItem>
+                    <SelectItem value="mdf">MDF</SelectItem>
+                    <SelectItem value="vidro">Vidro</SelectItem>
+                    <SelectItem value="outro">Outro</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="finishing">Acabamento</Label>
+                <Select
+                  value={formData.finishing}
+                  onValueChange={(value) => setFormData({ ...formData, finishing: value })}
+                >
+                  <SelectTrigger data-testid="select-deal-finishing">
+                    <SelectValue placeholder="Selecione o acabamento" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sem_acabamento">Sem acabamento</SelectItem>
+                    <SelectItem value="ilhos">Ilhós</SelectItem>
+                    <SelectItem value="bastao">Bastão</SelectItem>
+                    <SelectItem value="moldura">Moldura</SelectItem>
+                    <SelectItem value="verniz">Verniz</SelectItem>
+                    <SelectItem value="laminacao">Laminação</SelectItem>
+                    <SelectItem value="recorte">Recorte especial</SelectItem>
+                    <SelectItem value="outro">Outro</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="deliveryDays">Prazo de Entrega (dias)</Label>
+                <Input
+                  id="deliveryDays"
+                  data-testid="input-deal-delivery-days"
+                  type="number"
+                  value={formData.deliveryDays}
+                  onChange={(e) => setFormData({ ...formData, deliveryDays: e.target.value })}
+                  placeholder="Ex: 5, 10, 15..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="installationRequired">Instalação</Label>
+                <Select
+                  value={formData.installationRequired}
+                  onValueChange={(value) => setFormData({ ...formData, installationRequired: value })}
+                >
+                  <SelectTrigger data-testid="select-deal-installation">
+                    <SelectValue placeholder="Necessita instalação?" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sim">Sim</SelectItem>
+                    <SelectItem value="nao">Não</SelectItem>
+                    <SelectItem value="avaliar">A avaliar</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Observações */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-muted-foreground">OBSERVAÇÕES E PRÓXIMOS PASSOS</h3>
+            <div className="space-y-2">
+              <Label htmlFor="notes">Anotações</Label>
               <Textarea
                 id="notes"
                 data-testid="input-deal-notes"
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="O que foi feito e qual o próximo passo?"
+                placeholder="O que foi feito e qual o próximo passo? Ex: Cliente pediu orçamento por WhatsApp, aguardando aprovação do gerente..."
                 rows={3}
               />
             </div>
