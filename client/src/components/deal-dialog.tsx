@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -31,6 +33,9 @@ export function DealDialog({ open, onOpenChange, deal, mode }: DealDialogProps) 
     assignedTo: "",
     stage: "contact",
     status: "active",
+    notes: "",
+    category: "",
+    origin: "",
   });
 
   useEffect(() => {
@@ -42,6 +47,9 @@ export function DealDialog({ open, onOpenChange, deal, mode }: DealDialogProps) 
         assignedTo: deal.assignedTo || "",
         stage: deal.stage || "contact",
         status: deal.status || "active",
+        notes: "",
+        category: "",
+        origin: "",
       });
     } else {
       setFormData({
@@ -51,6 +59,9 @@ export function DealDialog({ open, onOpenChange, deal, mode }: DealDialogProps) 
         assignedTo: "",
         stage: "contact",
         status: "active",
+        notes: "",
+        category: "",
+        origin: "",
       });
     }
   }, [deal, mode, open]);
@@ -125,14 +136,16 @@ export function DealDialog({ open, onOpenChange, deal, mode }: DealDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-serif">
+          <DialogTitle className="text-xl font-serif">
             {mode === "edit" ? "Editar Negócio" : "Novo Negócio"}
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Informações Básicas */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-muted-foreground">INFORMAÇÕES BÁSICAS</h3>
             <div className="space-y-2">
               <Label htmlFor="title">Título do Negócio *</Label>
               <Input
@@ -140,7 +153,7 @@ export function DealDialog({ open, onOpenChange, deal, mode }: DealDialogProps) 
                 data-testid="input-deal-title"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="Ex: Banner para evento X"
+                placeholder="Ex: Banner para evento corporativo"
                 required
               />
             </div>
@@ -162,6 +175,13 @@ export function DealDialog({ open, onOpenChange, deal, mode }: DealDialogProps) 
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <Separator />
+
+          {/* Detalhes do Negócio */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-muted-foreground">DETALHES DO NEGÓCIO</h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="value">Valor Estimado (R$)</Label>
@@ -186,9 +206,41 @@ export function DealDialog({ open, onOpenChange, deal, mode }: DealDialogProps) 
                 />
               </div>
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="category">Categoria</Label>
+                <Input
+                  id="category"
+                  data-testid="input-deal-category"
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  placeholder="Ex: Sinalização, Adesivos..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="origin">Origem</Label>
+                <Select
+                  value={formData.origin}
+                  onValueChange={(value) => setFormData({ ...formData, origin: value })}
+                >
+                  <SelectTrigger data-testid="select-deal-origin">
+                    <SelectValue placeholder="Como chegou até nós?" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="website">Website</SelectItem>
+                    <SelectItem value="indicacao">Indicação</SelectItem>
+                    <SelectItem value="instagram">Instagram</SelectItem>
+                    <SelectItem value="facebook">Facebook</SelectItem>
+                    <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                    <SelectItem value="telefone">Telefone</SelectItem>
+                    <SelectItem value="outros">Outros</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
             {mode === "edit" && (
               <div className="space-y-2">
-                <Label htmlFor="stage">Estágio</Label>
+                <Label htmlFor="stage">Estágio do Negócio</Label>
                 <Select
                   value={formData.stage}
                   onValueChange={(value) => setFormData({ ...formData, stage: value })}
@@ -208,8 +260,20 @@ export function DealDialog({ open, onOpenChange, deal, mode }: DealDialogProps) 
                 </Select>
               </div>
             )}
+            <div className="space-y-2">
+              <Label htmlFor="notes">Observações</Label>
+              <Textarea
+                id="notes"
+                data-testid="input-deal-notes"
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                placeholder="O que foi feito e qual o próximo passo?"
+                rows={3}
+              />
+            </div>
           </div>
-          <DialogFooter>
+
+          <DialogFooter className="gap-2">
             <Button
               type="button"
               variant="outline"
@@ -224,7 +288,7 @@ export function DealDialog({ open, onOpenChange, deal, mode }: DealDialogProps) 
               disabled={isLoading}
               data-testid="button-submit-deal"
             >
-              {isLoading ? "Salvando..." : mode === "edit" ? "Atualizar" : "Criar Negócio"}
+              {isLoading ? "Salvando..." : mode === "edit" ? "Atualizar Negócio" : "Criar Negócio"}
             </Button>
           </DialogFooter>
         </form>
