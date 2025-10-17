@@ -249,7 +249,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const data = insertDealSchema.parse(req.body);
       const deal = await storage.createDeal(data);
       res.status(201).json(deal);
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Deal creation error:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ 
+          error: "Invalid deal data", 
+          details: error.errors,
+          received: req.body 
+        });
+      }
       res.status(400).json({ error: "Invalid deal data" });
     }
   });
@@ -529,55 +537,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update budget status
       const updatedBudget = await storage.updateBudget(req.params.budgetId, { status: 'approved' });
 
-      // Find associated deal
-      const dealBudgets = await storage.getDealBudgets('');
-      const dealBudget = dealBudgets.find(db => db.budgetId === budget.id);
+      // Try to find associated deal (budget might not have a deal)
+      const allDealBudgets = await storage.getDealBudgets('');
+      const dealBudget = allDealBudgets.find(db => db.budgetId === budget.id);
+      
+      let dealId = null;
       
       if (dealBudget) {
+        dealId = dealBudget.dealId;
+        
         // Update deal to won
-        await storage.updateDeal(dealBudget.dealId, { 
+        await storage.updateDeal(dealId, { 
           status: 'won',
           stage: 'closed'
         });
 
-        // Create production
-        const production = await storage.createProduction({
-          dealId: dealBudget.dealId,
-          budgetId: budget.id,
-          status: 'awaiting',
-          assignedTo: null,
-          deadline: null,
-        });
-
-        // Log activities
+        // Log deal activity
         await storage.createActivity({
           entityType: 'deal',
-          entityId: dealBudget.dealId,
+          entityId: dealId,
           type: 'status_change',
           title: 'Negócio ganho',
           description: 'Orçamento aprovado - negócio marcado como ganho',
         });
+      }
 
-        await storage.createActivity({
-          entityType: 'budget',
+      // Always create production when budget is approved
+      const production = await storage.createProduction({
+        dealId: dealId,
+        budgetId: budget.id,
+        status: 'awaiting',
+        assignedTo: null,
+        deadline: null,
+      });
+
+      // Log budget approval activity
+      await storage.createActivity({
+        entityType: 'budget',
           entityId: budget.id,
           type: 'status_change',
           title: 'Orçamento aprovado',
           description: 'Orçamento aprovado pelo cliente',
         });
 
-        await storage.createActivity({
-          entityType: 'production',
-          entityId: production.id,
-          type: 'created',
-          title: 'Produção criada',
-          description: `Produção criada automaticamente após aprovação do orçamento`,
-        });
+      await storage.createActivity({
+        entityType: 'production',
+        entityId: production.id,
+        type: 'created',
+        title: 'Produção criada',
+        description: `Produção criada automaticamente após aprovação do orçamento`,
+      });
 
-        res.json({ budget: updatedBudget, production });
-      } else {
-        res.json({ budget: updatedBudget });
-      }
+      res.json({ budget: updatedBudget, production });
     } catch (error) {
       console.error('Error approving budget:', error);
       res.status(500).json({ error: "Failed to approve budget" });

@@ -7,10 +7,47 @@ Zoom CRM is a custom customer relationship management system designed specifical
 The system enables sales teams to:
 - Track client relationships and communication history
 - Create dynamic budgets with multiple line items and automatic calculations
-- Manage deals through a visual Kanban-style pipeline
+- Manage deals through a visual Kanban-style pipeline with drag-and-drop
 - Maintain a product/service catalog with flexible pricing models
 - Monitor production workflow from awaiting to completion
 - Generate and send budgets via WhatsApp and PDF
+
+## Recent Implementation (Latest Session)
+
+### CRM-Level Professional Features Added:
+1. **Deep Data Model Integration**
+   - Activities log (tracks all interactions: calls, emails, stage changes)
+   - Tasks management (linked to deals with priorities and due dates)
+   - Deal-Budget many-to-many relationship (dealBudgets junction table)
+   - Deal Products tracking for complex quotes
+
+2. **Unified Deal Workspace** (/deal/:id)
+   - Replaced simple dialog with full workspace page
+   - 4 tabs: Overview, Orçamentos, Tarefas, Timeline
+   - Timeline shows all deal activities chronologically
+   - Create budgets directly from deals with pre-filled data
+
+3. **Composite Workflow Endpoints**
+   - POST /api/deals/:dealId/create-budget - Creates budget from deal
+   - POST /api/budgets/:budgetId/approve - Approves budget, closes deal, creates production
+   - POST /api/deals/:dealId/move-stage - Moves deal stage + auto-logs activity
+
+4. **Client Timeline** (/clientes → view timeline)
+   - Aggregates ALL client history in one view
+   - Shows deals, budgets, production, and activities
+   - Chronological order with type indicators
+
+5. **Pipeline Enhancements**
+   - Drag-and-drop between stages with automatic logging
+   - Stale deal indicators (shows "Xd parado" badge for deals >7 days inactive)
+   - Deals navigate to full workspace instead of dialog
+   - Visual deal value and client name on cards
+
+### Known Limitations & Next Steps:
+- Budget approval UI: Currently only creates budgets, needs list view + approve button
+- Client timeline: Route exists but needs UI polish
+- Deal products: Backend ready but UI not implemented
+- Tasks management: Backend complete but UI needed
 
 ## User Preferences
 

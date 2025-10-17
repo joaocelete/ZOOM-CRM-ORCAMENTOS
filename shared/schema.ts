@@ -150,9 +150,31 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export const insertClientSchema = createInsertSchema(clients).omit({ id: true });
 export const insertProductSchema = createInsertSchema(products).omit({ id: true });
-export const insertBudgetItemSchema = createInsertSchema(budgetItems).omit({ id: true });
-export const insertBudgetSchema = createInsertSchema(budgets).omit({ id: true, createdAt: true });
-export const insertDealSchema = createInsertSchema(deals).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertBudgetItemSchema = createInsertSchema(budgetItems)
+  .omit({ id: true })
+  .extend({
+    // budgetId is set by backend after budget creation
+    budgetId: z.string().optional(),
+    // subtotal can be auto-calculated from quantity * value
+    subtotal: z.coerce.string().optional(),
+    quantity: z.coerce.number().optional(),
+  });
+export const insertBudgetSchema = createInsertSchema(budgets)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    status: z.string().default('draft'),
+    total: z.coerce.string().default('0'),
+  });
+export const insertDealSchema = createInsertSchema(deals)
+  .omit({ id: true, createdAt: true, updatedAt: true })
+  .extend({
+    stage: z.string().default('contact'),
+    status: z.string().default('active'),
+    // Coerce numeric values from form strings
+    value: z.coerce.string(),
+    quantity: z.coerce.number().int().optional().nullable(),
+    deliveryDeadline: z.coerce.number().int().optional().nullable(),
+  });
 export const insertProductionSchema = createInsertSchema(production).omit({ id: true, createdAt: true });
 export const insertActivitySchema = createInsertSchema(activities).omit({ id: true, createdAt: true });
 export const insertTaskSchema = createInsertSchema(tasks).omit({ id: true, createdAt: true, completedAt: true });
