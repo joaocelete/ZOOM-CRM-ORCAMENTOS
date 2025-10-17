@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Phone, Mail, MapPin, Pencil, Trash2 } from "lucide-react";
+import { Search, Plus, Phone, Mail, MapPin, Pencil, Trash2, History } from "lucide-react";
 import type { Client } from "@shared/schema";
 
 interface ClientListProps {
@@ -11,9 +11,10 @@ interface ClientListProps {
   onEdit?: (client: Client) => void;
   onDelete?: (id: string) => void;
   onAdd?: () => void;
+  onViewTimeline?: (clientId: string) => void;
 }
 
-export function ClientList({ clients, onEdit, onDelete, onAdd }: ClientListProps) {
+export function ClientList({ clients, onEdit, onDelete, onAdd, onViewTimeline }: ClientListProps) {
   const [search, setSearch] = useState("");
 
   const filteredClients = clients.filter(
@@ -82,15 +83,27 @@ export function ClientList({ clients, onEdit, onDelete, onAdd }: ClientListProps
               <div className="flex items-center gap-2 text-sm">
                 <Phone className="h-4 w-4 text-muted-foreground" />
                 <span className="flex-1">{client.phone}</span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => openWhatsApp(client.phone)}
-                  data-testid={`button-whatsapp-${client.id}`}
-                  className="text-xs"
-                >
-                  WhatsApp
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => openWhatsApp(client.phone)}
+                    data-testid={`button-whatsapp-${client.id}`}
+                    className="text-xs"
+                  >
+                    WhatsApp
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onViewTimeline?.(client.id)}
+                    data-testid={`button-timeline-${client.id}`}
+                    className="text-xs"
+                  >
+                    <History className="h-3 w-3 mr-1" />
+                    Timeline
+                  </Button>
+                </div>
               </div>
               {client.email && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">

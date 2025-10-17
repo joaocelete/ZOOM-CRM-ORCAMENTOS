@@ -3,9 +3,11 @@ import { ClientList } from "@/components/client-list";
 import { ClientDialog } from "@/components/client-dialog";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useLocation } from "wouter";
 import type { Client } from "@shared/schema";
 
 export default function Clientes() {
+  const [, setLocation] = useLocation();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | undefined>();
   const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
@@ -58,6 +60,7 @@ export default function Clientes() {
         onEdit={handleEdit}
         onDelete={(id) => deleteMutation.mutate(id)}
         onAdd={handleAdd}
+        onViewTimeline={(id) => setLocation(`/client/${id}/timeline`)}
       />
 
       <ClientDialog

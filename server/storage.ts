@@ -13,16 +13,28 @@ import {
   type InsertDeal,
   type Production,
   type InsertProduction,
+  type Activity,
+  type InsertActivity,
+  type Task,
+  type InsertTask,
+  type DealBudget,
+  type InsertDealBudget,
+  type DealProduct,
+  type InsertDealProduct,
   users,
   clients,
   products,
   budgets,
   budgetItems,
   deals,
-  production
+  production,
+  activities,
+  tasks,
+  dealBudgets,
+  dealProducts
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -69,6 +81,28 @@ export interface IStorage {
   createProduction(prod: InsertProduction): Promise<Production>;
   updateProduction(id: string, prod: Partial<InsertProduction>): Promise<Production>;
   deleteProduction(id: string): Promise<void>;
+  
+  // Activities
+  getActivities(entityType: string, entityId: string): Promise<Activity[]>;
+  createActivity(activity: InsertActivity): Promise<Activity>;
+  deleteActivity(id: string): Promise<void>;
+  
+  // Tasks
+  getTasks(dealId: string): Promise<Task[]>;
+  getTask(id: string): Promise<Task | undefined>;
+  createTask(task: InsertTask): Promise<Task>;
+  updateTask(id: string, task: Partial<InsertTask>): Promise<Task>;
+  deleteTask(id: string): Promise<void>;
+  
+  // Deal-Budget Relationships
+  getDealBudgets(dealId: string): Promise<DealBudget[]>;
+  createDealBudget(dealBudget: InsertDealBudget): Promise<DealBudget>;
+  deleteDealBudget(id: string): Promise<void>;
+  
+  // Deal Products
+  getDealProducts(dealId: string): Promise<DealProduct[]>;
+  createDealProduct(product: InsertDealProduct): Promise<DealProduct>;
+  deleteDealProduct(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -252,6 +286,92 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProduction(id: string): Promise<void> {
     await db.delete(production).where(eq(production.id, id));
+  }
+
+  // Activities
+  async getActivities(entityType: string, entityId: string): Promise<Activity[]> {
+    return await db
+      .select()
+      .from(activities)
+      .where(and(eq(activities.entityType, entityType), eq(activities.entityId, entityId)))
+      .orderBy(desc(activities.createdAt));
+  }
+
+  async createActivity(insertActivity: InsertActivity): Promise<Activity> {
+    const [activity] = await db.insert(activities).values(insertActivity).returning();
+    return activity;
+  }
+
+  async deleteActivity(id: string): Promise<void> {
+    await db.delete(activities).where(eq(activities.id, id));
+  }
+
+  // Tasks
+  async getTasks(dealId: string): Promise<Task[]> {
+    return await db
+      .select()
+      .from(tasks)
+      .where(eq(tasks.dealId, dealId))
+      .orderBy(desc(tasks.createdAt));
+  }
+
+  async getTask(id: string): Promise<Task | undefined> {
+    const [task] = await db.select().from(tasks).where(eq(tasks.id, id));
+    return task || undefined;
+  }
+
+  async createTask(insertTask: InsertTask): Promise<Task> {
+    const [task] = await db.insert(tasks).values(insertTask).returning();
+    return task;
+  }
+
+  async updateTask(id: string, updateData: Partial<InsertTask>): Promise<Task> {
+    const completedAt = updateData.status === 'completed' ? new Date() : null;
+    const [task] = await db
+      .update(tasks)
+      .set({ ...updateData, completedAt })
+      .where(eq(tasks.id, id))
+      .returning();
+    return task;
+  }
+
+  async deleteTask(id: string): Promise<void> {
+    await db.delete(tasks).where(eq(tasks.id, id));
+  }
+
+  // Deal-Budget Relationships
+  async getDealBudgets(dealId: string): Promise<DealBudget[]> {
+    return await db
+      .select()
+      .from(dealBudgets)
+      .where(eq(dealBudgets.dealId, dealId))
+      .orderBy(desc(dealBudgets.createdAt));
+  }
+
+  async createDealBudget(insertDealBudget: InsertDealBudget): Promise<DealBudget> {
+    const [dealBudget] = await db.insert(dealBudgets).values(insertDealBudget).returning();
+    return dealBudget;
+  }
+
+  async deleteDealBudget(id: string): Promise<void> {
+    await db.delete(dealBudgets).where(eq(dealBudgets.id, id));
+  }
+
+  // Deal Products
+  async getDealProducts(dealId: string): Promise<DealProduct[]> {
+    return await db
+      .select()
+      .from(dealProducts)
+      .where(eq(dealProducts.dealId, dealId));
+  }
+
+  async createDealProduct(insertDealProduct: InsertDealProduct): Promise<DealProduct> {
+    const [product] = await db.insert(dealProducts).values(insertDealProduct).returning();
+    return product;
+  }
+
+  async deleteDealProduct(id: string): Promise<void> {
+    await db.delete(dealProducts).where(eq(dealProducts.id, id));
   }
 }
 

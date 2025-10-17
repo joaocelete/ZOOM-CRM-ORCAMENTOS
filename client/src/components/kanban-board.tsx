@@ -17,6 +17,8 @@ interface Deal {
   value: number;
   stage: string;
   updatedAt: string;
+  isStale?: boolean; // True if no activity for >7 days
+  daysInactive?: number;
 }
 
 const stages = [
@@ -101,9 +103,16 @@ export function KanbanBoard({ deals, onDealClick, onDeleteDeal, onMoveCard }: Ka
                         <div className="flex-1 space-y-1">
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1">
-                              <p className="text-sm font-semibold leading-tight text-foreground">
-                                {deal.clientName}
-                              </p>
+                              <div className="flex items-center gap-1">
+                                <span className="text-sm font-semibold leading-tight text-foreground">
+                                  {deal.clientName}
+                                </span>
+                                {deal.isStale && (
+                                  <Badge variant="destructive" className="h-4 text-[10px] px-1">
+                                    {deal.daysInactive}d parado
+                                  </Badge>
+                                )}
+                              </div>
                               <p className="mt-0.5 text-xs text-muted-foreground leading-tight">
                                 {deal.title}
                               </p>

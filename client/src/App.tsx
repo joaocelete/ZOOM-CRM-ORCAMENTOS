@@ -11,14 +11,18 @@ import Orcamentos from "@/pages/orcamentos";
 import Pipeline from "@/pages/pipeline";
 import Produtos from "@/pages/produtos";
 import Producao from "@/pages/producao";
+import DealWorkspace from "@/pages/deal-workspace";
+import ClientTimeline from "@/pages/client-timeline";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
       <Route path="/clientes" component={Clientes} />
+      <Route path="/client/:id/timeline" component={ClientTimeline} />
       <Route path="/orcamentos" component={Orcamentos} />
       <Route path="/pipeline" component={Pipeline} />
+      <Route path="/deal/:id" component={DealWorkspace} />
       <Route path="/produtos" component={Produtos} />
       <Route path="/producao" component={Producao} />
       <Route component={NotFound} />

@@ -61,6 +61,23 @@ export const deals = pgTable("deals", {
   stage: text("stage").notNull(), // 'contact', 'collection', 'qualification', 'costing', 'sent', 'followup', 'closed'
   status: text("status").notNull(), // 'active', 'won', 'lost'
   assignedTo: text("assigned_to"),
+  
+  // Deal details
+  category: text("category"), // 'sinalização', 'adesivos', 'banners', etc.
+  origin: text("origin"), // 'website', 'instagram', 'indicação', 'whatsapp', etc.
+  
+  // Service information
+  description: text("description"),
+  quantity: integer("quantity"),
+  dimensions: text("dimensions"), // ex: "3m x 2m"
+  material: text("material"), // 'lona', 'vinil', 'acm', 'acrílico', etc.
+  finishing: text("finishing"), // 'ilhós', 'bastão', 'moldura', 'laminação', etc.
+  deliveryDeadline: integer("delivery_deadline"), // days
+  installationRequired: text("installation_required"), // 'yes', 'no', 'evaluate'
+  
+  // Observations
+  observations: text("observations"),
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -75,6 +92,56 @@ export const production = pgTable("production", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Activities - Log de todas interações e mudanças
+export const activities = pgTable("activities", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  entityType: text("entity_type").notNull(), // 'deal', 'client', 'budget', 'production'
+  entityId: varchar("entity_id").notNull(),
+  type: text("type").notNull(), // 'note', 'call', 'email', 'whatsapp', 'meeting', 'stage_change', 'status_change', 'created', 'updated'
+  title: text("title").notNull(),
+  description: text("description"),
+  userId: varchar("user_id"),
+  metadata: text("metadata"), // JSON string for additional data
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Tasks - Tarefas vinculadas a deals
+export const tasks = pgTable("tasks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  dealId: varchar("deal_id").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  status: text("status").notNull(), // 'pending', 'completed', 'cancelled'
+  priority: text("priority"), // 'low', 'medium', 'high'
+  dueDate: timestamp("due_date"),
+  assignedTo: text("assigned_to"),
+  createdAt: timestamp("created_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+});
+
+// Deal-Budget Junction (many-to-many)
+export const dealBudgets = pgTable("deal_budgets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  dealId: varchar("deal_id").notNull(),
+  budgetId: varchar("budget_id").notNull(),
+  isPrimary: integer("is_primary").default(0), // 1 for primary budget, 0 for alternatives
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Deal Products - Produtos específicos do deal
+export const dealProducts = pgTable("deal_products", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  dealId: varchar("deal_id").notNull(),
+  productId: varchar("product_id"),
+  productName: text("product_name").notNull(),
+  quantity: integer("quantity").notNull(),
+  dimensions: text("dimensions"), // ex: "3m x 2m"
+  material: text("material"),
+  finishing: text("finishing"),
+  pricePerUnit: decimal("price_per_unit", { precision: 10, scale: 2 }),
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -87,6 +154,10 @@ export const insertBudgetItemSchema = createInsertSchema(budgetItems).omit({ id:
 export const insertBudgetSchema = createInsertSchema(budgets).omit({ id: true, createdAt: true });
 export const insertDealSchema = createInsertSchema(deals).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertProductionSchema = createInsertSchema(production).omit({ id: true, createdAt: true });
+export const insertActivitySchema = createInsertSchema(activities).omit({ id: true, createdAt: true });
+export const insertTaskSchema = createInsertSchema(tasks).omit({ id: true, createdAt: true, completedAt: true });
+export const insertDealBudgetSchema = createInsertSchema(dealBudgets).omit({ id: true, createdAt: true });
+export const insertDealProductSchema = createInsertSchema(dealProducts).omit({ id: true });
 
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -109,3 +180,15 @@ export type Deal = typeof deals.$inferSelect;
 
 export type InsertProduction = z.infer<typeof insertProductionSchema>;
 export type Production = typeof production.$inferSelect;
+
+export type InsertActivity = z.infer<typeof insertActivitySchema>;
+export type Activity = typeof activities.$inferSelect;
+
+export type InsertTask = z.infer<typeof insertTaskSchema>;
+export type Task = typeof tasks.$inferSelect;
+
+export type InsertDealBudget = z.infer<typeof insertDealBudgetSchema>;
+export type DealBudget = typeof dealBudgets.$inferSelect;
+
+export type InsertDealProduct = z.infer<typeof insertDealProductSchema>;
+export type DealProduct = typeof dealProducts.$inferSelect;

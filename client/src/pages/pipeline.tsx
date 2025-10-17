@@ -7,6 +7,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Deal } from "@shared/schema";
 import { useState } from "react";
+import { useLocation } from "wouter";
 
 interface DealWithClient {
   id: string;
@@ -15,9 +16,12 @@ interface DealWithClient {
   value: number;
   stage: string;
   updatedAt: string;
+  isStale?: boolean;
+  daysInactive?: number;
 }
 
 export default function Pipeline() {
+  const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedDeal, setSelectedDeal] = useState<Deal | undefined>();
@@ -38,22 +42,34 @@ export default function Pipeline() {
 
   const updateStageMutation = useMutation({
     mutationFn: async ({ id, stage }: { id: string; stage: string }) => {
-      await apiRequest("PATCH", `/api/deals/${id}`, { stage });
+      await apiRequest("POST", `/api/deals/${id}/move-stage`, { stage });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
     },
   });
 
   // Transform deals for kanban display
-  const formattedDeals: DealWithClient[] = deals.map(deal => ({
-    id: deal.id,
-    title: deal.title,
-    clientName: deal.assignedTo || "Cliente",
-    value: parseFloat(deal.value as any) || 0,
-    stage: deal.stage,
-    updatedAt: deal.updatedAt ? new Date(deal.updatedAt).toLocaleDateString('pt-BR') : "Hoje",
-  }));
+  const formattedDeals: DealWithClient[] = deals.map(deal => {
+    // Use deal.updatedAt as indicator of last activity
+    // When moving stages or creating activities, updatedAt is refreshed
+    const lastUpdate = deal.updatedAt ? new Date(deal.updatedAt) : new Date();
+    const now = new Date();
+    const daysDiff = Math.floor((now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24));
+    const isStale = daysDiff > 7 && deal.status === 'active'; // Only show stale for active deals
+    
+    return {
+      id: deal.id,
+      title: deal.title,
+      clientName: deal.assignedTo || "Cliente",
+      value: parseFloat(deal.value as any) || 0,
+      stage: deal.stage,
+      updatedAt: deal.updatedAt ? new Date(deal.updatedAt).toLocaleDateString('pt-BR') : "Hoje",
+      isStale,
+      daysInactive: isStale ? daysDiff : undefined,
+    };
+  });
 
   const filteredDeals = formattedDeals.filter(deal =>
     deal.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -123,7 +139,7 @@ export default function Pipeline() {
       <div className="rounded-lg border bg-card p-4">
         <KanbanBoard
           deals={filteredDeals}
-          onDealClick={(deal) => handleEdit(deal.id)}
+          onDealClick={(deal) => setLocation(`/deal/${deal.id}`)}
           onDeleteDeal={(id) => deleteMutation.mutate(id)}
           onMoveCard={(dealId: string, newStage: string) => {
             updateStageMutation.mutate({ id: dealId, stage: newStage });
