@@ -4,6 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Plus, Pencil, Trash2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { Product } from "@shared/schema";
 
 interface ProductListProps {
@@ -15,12 +22,22 @@ interface ProductListProps {
 
 export function ProductList({ products, onEdit, onDelete, onAdd }: ProductListProps) {
   const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
 
-  const filteredProducts = products.filter(
-    (product) =>
+  const categories = Array.from(new Set(products.map((p) => p.category).filter(Boolean)));
+  
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch =
       product.name.toLowerCase().includes(search.toLowerCase()) ||
-      product.category?.toLowerCase().includes(search.toLowerCase())
-  );
+      product.description?.toLowerCase().includes(search.toLowerCase()) ||
+      product.category?.toLowerCase().includes(search.toLowerCase());
+    
+    const matchesCategory = categoryFilter === "all" || product.category === categoryFilter;
+    const matchesType = typeFilter === "all" || product.type === typeFilter;
+    
+    return matchesSearch && matchesCategory && matchesType;
+  });
 
   const getTypeLabel = (type: string) => {
     const types: Record<string, string> = {
@@ -43,8 +60,8 @@ export function ProductList({ products, onEdit, onDelete, onAdd }: ProductListPr
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-3">
-        <div className="relative flex-1">
+      <div className="flex flex-wrap gap-3">
+        <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Buscar produtos..."
@@ -54,6 +71,33 @@ export function ProductList({ products, onEdit, onDelete, onAdd }: ProductListPr
             data-testid="input-search-products"
           />
         </div>
+        
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="w-[180px]" data-testid="select-category-filter">
+            <SelectValue placeholder="Categoria" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas categorias</SelectItem>
+            {categories.map((cat) => (
+              <SelectItem key={cat} value={cat!}>
+                {cat}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger className="w-[180px]" data-testid="select-type-filter">
+            <SelectValue placeholder="Tipo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os tipos</SelectItem>
+            <SelectItem value="m2">Por m²</SelectItem>
+            <SelectItem value="fixed">Valor Fixo</SelectItem>
+            <SelectItem value="service">Serviço</SelectItem>
+          </SelectContent>
+        </Select>
+        
         <Button onClick={onAdd} data-testid="button-add-product">
           <Plus className="h-4 w-4 mr-2" />
           Novo Produto
