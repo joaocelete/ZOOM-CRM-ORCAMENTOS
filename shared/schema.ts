@@ -84,7 +84,7 @@ export const deals = pgTable("deals", {
 
 export const production = pgTable("production", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  dealId: varchar("deal_id").notNull(),
+  dealId: varchar("deal_id"),
   budgetId: varchar("budget_id").notNull(),
   status: text("status").notNull(), // 'awaiting', 'production', 'installation', 'completed'
   assignedTo: text("assigned_to"),

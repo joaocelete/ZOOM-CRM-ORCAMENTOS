@@ -12,9 +12,37 @@ The system enables sales teams to:
 - Monitor production workflow from awaiting to completion
 - Generate and send budgets via WhatsApp and PDF
 
-## Recent Implementation (Latest Session)
+## Recent Implementation (Latest Session - Oct 17, 2025)
 
-### CRM-Level Professional Features Added:
+### ✅ Completed: List Views & Product Import
+
+1. **Excel Product Import (348 products)**
+   - Script: `scripts/import-products.ts`
+   - Imported from: `tabela de valores_1760702151126.xlsx`
+   - Mapping: Código, Categoria, Descrição, Unidade, Valor → Products table
+   - Type detection: M² → m2, UN → fixed, outros → service
+
+2. **Enhanced Product List** (/produtos)
+   - Search by name, description, category
+   - Filter by category (dynamic from products)
+   - Filter by type (Por m², Valor Fixo, Serviço)
+   - Card view with pricing and production time
+
+3. **Budget List & Approval** (/orcamentos)
+   - Tabs: "Lista de Orçamentos" + "Criar Novo"
+   - Search by client or value
+   - Status badges: Rascunho, Enviado, Aprovado, Rejeitado
+   - "Aprovar Orçamento" button (visible only on draft)
+   - Loading skeleton states
+   - Error handling with toasts
+
+4. **Fixed: Budget Approval Workflow**
+   - Issue: dealId NOT NULL constraint failed for budgets without deals
+   - Solution: Made `production.dealId` nullable in schema
+   - Now supports: Approve budget → Create production (with or without deal)
+   - Tested: End-to-end flow works perfectly
+
+### CRM-Level Professional Features:
 1. **Deep Data Model Integration**
    - Activities log (tracks all interactions: calls, emails, stage changes)
    - Tasks management (linked to deals with priorities and due dates)
@@ -22,29 +50,21 @@ The system enables sales teams to:
    - Deal Products tracking for complex quotes
 
 2. **Unified Deal Workspace** (/deal/:id)
-   - Replaced simple dialog with full workspace page
    - 4 tabs: Overview, Orçamentos, Tarefas, Timeline
    - Timeline shows all deal activities chronologically
    - Create budgets directly from deals with pre-filled data
 
 3. **Composite Workflow Endpoints**
    - POST /api/deals/:dealId/create-budget - Creates budget from deal
-   - POST /api/budgets/:budgetId/approve - Approves budget, closes deal, creates production
+   - POST /api/budgets/:budgetId/approve - Approves budget → Creates production
    - POST /api/deals/:dealId/move-stage - Moves deal stage + auto-logs activity
 
-4. **Client Timeline** (/clientes → view timeline)
-   - Aggregates ALL client history in one view
-   - Shows deals, budgets, production, and activities
-   - Chronological order with type indicators
-
-5. **Pipeline Enhancements**
+4. **Pipeline Enhancements**
    - Drag-and-drop between stages with automatic logging
    - Stale deal indicators (shows "Xd parado" badge for deals >7 days inactive)
-   - Deals navigate to full workspace instead of dialog
    - Visual deal value and client name on cards
 
 ### Known Limitations & Next Steps:
-- Budget approval UI: Currently only creates budgets, needs list view + approve button
 - Client timeline: Route exists but needs UI polish
 - Deal products: Backend ready but UI not implemented
 - Tasks management: Backend complete but UI needed
