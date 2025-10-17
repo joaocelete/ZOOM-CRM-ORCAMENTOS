@@ -66,6 +66,13 @@ export default function Orcamentos() {
         description: "Produção criada com sucesso.",
       });
     },
+    onError: () => {
+      toast({
+        title: "Erro ao aprovar",
+        description: "Não foi possível aprovar o orçamento.",
+        variant: "destructive",
+      });
+    },
   });
 
   const getStatusLabel = (status: string) => {
@@ -128,13 +135,28 @@ export default function Orcamentos() {
             />
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            {filteredBudgets.map((budget) => {
-              const client = clients.find((c) => c.id === budget.clientId);
-              const statusInfo = getStatusLabel(budget.status);
+          {loadingBudgets ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              {[1, 2, 3, 4].map((i) => (
+                <Card key={i}>
+                  <CardHeader className="pb-3">
+                    <div className="h-4 w-3/4 bg-muted animate-pulse rounded" />
+                    <div className="h-3 w-1/2 bg-muted animate-pulse rounded mt-2" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-8 w-full bg-muted animate-pulse rounded" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              {filteredBudgets.map((budget) => {
+                const client = clients.find((c) => c.id === budget.clientId);
+                const statusInfo = getStatusLabel(budget.status);
 
-              return (
-                <Card key={budget.id} className="hover-elevate" data-testid={`budget-card-${budget.id}`}>
+                return (
+                  <Card key={budget.id} className="hover-elevate" data-testid={`budget-card-${budget.id}`}>
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1">
@@ -176,11 +198,12 @@ export default function Orcamentos() {
                     )}
                   </CardContent>
                 </Card>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
 
-          {filteredBudgets.length === 0 && (
+          {!loadingBudgets && filteredBudgets.length === 0 && (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <FileText className="h-12 w-12 text-muted-foreground mb-4" />
