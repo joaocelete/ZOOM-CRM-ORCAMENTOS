@@ -29,11 +29,21 @@ The system enables sales teams to:
 - All company data stored centrally for easy management
 - Logo stored as base64 string for simplicity
 
-**PDF Generation Integration**
-- `generateBudgetPDF()` now accepts optional CompanySettings parameter
-- Header: Displays company logo (if available) or company name
-- Footer: Shows company contact info, CNPJ, and location
-- Graceful fallbacks to default "Zoom Comunicação Visual" branding
+**PDF Generation Integration (Professional Layout)**
+- Completely redesigned PDF with professional layout
+- Header: Company logo + name, phone, email on yellow branded bar
+- Budget info: Number, date, validity period
+- Client data: Name, company, phone, email, location in highlighted box
+- Detailed item table with:
+  - Item number and description
+  - Type (m², fixed, service)
+  - Specifications: dimensions, area calculations, unit prices
+  - Individual subtotals
+- Visual total section with highlighted grand total
+- Complete commercial terms: delivery time, payment, warranty, validity
+- Professional footer: Company name, contacts, CNPJ, full address
+- Page numbering on multi-page budgets
+- Responsive layout with automatic page breaks
 - Error handling for logo loading issues
 
 **API Improvements**
