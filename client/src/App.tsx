@@ -14,6 +14,7 @@ import Produtos from "@/pages/produtos";
 import Producao from "@/pages/producao";
 import DealWorkspace from "@/pages/deal-workspace";
 import ClientTimeline from "@/pages/client-timeline";
+import Settings from "@/pages/settings";
 
 function Router() {
   return (
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/deal/:id" component={DealWorkspace} />
       <Route path="/produtos" component={Produtos} />
       <Route path="/producao" component={Producao} />
+      <Route path="/settings" component={Settings} />
       <Route component={NotFound} />
     </Switch>
   );

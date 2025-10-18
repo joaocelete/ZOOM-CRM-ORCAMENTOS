@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, FileText, Kanban, Package, Factory } from "lucide-react";
+import { LayoutDashboard, Users, FileText, Kanban, Package, Factory, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,7 @@ const navItems = [
   { title: "Pipeline", url: "/pipeline", icon: Kanban, testId: "nav-pipeline" },
   { title: "Produtos", url: "/produtos", icon: Package, testId: "nav-produtos" },
   { title: "Produção", url: "/producao", icon: Factory, testId: "nav-producao" },
+  { title: "Configurações", url: "/settings", icon: Settings, testId: "nav-settings" },
 ];
 
 export function Navbar() {
