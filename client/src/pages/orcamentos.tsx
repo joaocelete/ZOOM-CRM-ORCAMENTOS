@@ -8,9 +8,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, FileText, Check, X, FileDown } from "lucide-react";
+import { Search, Plus, FileText, Check, X, FileDown, Pencil, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { generateBudgetPDF } from "@/lib/pdf-generator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type BudgetWithClient = Budget & {
   client?: Client;
@@ -21,6 +31,8 @@ export default function Orcamentos() {
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("list");
+  const [editingBudget, setEditingBudget] = useState<BudgetWithClient | null>(null);
+  const [deletingBudget, setDeletingBudget] = useState<string | null>(null);
 
   const { data: clients = [], isLoading: loadingClients } = useQuery<Client[]>({
     queryKey: ["/api/clients"],
@@ -80,6 +92,49 @@ export default function Orcamentos() {
     },
   });
 
+  const updateBudgetMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      return await apiRequest("PATCH", `/api/budgets/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/budgets"] });
+      setEditingBudget(null);
+      setActiveTab("list");
+      toast({
+        title: "Orçamento atualizado!",
+        description: "As alterações foram salvas com sucesso.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Erro ao atualizar",
+        description: "Não foi possível atualizar o orçamento.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteBudgetMutation = useMutation({
+    mutationFn: async (budgetId: string) => {
+      return await apiRequest("DELETE", `/api/budgets/${budgetId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/budgets"] });
+      setDeletingBudget(null);
+      toast({
+        title: "Orçamento excluído!",
+        description: "O orçamento foi removido com sucesso.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Erro ao excluir",
+        description: "Não foi possível excluir o orçamento.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleGeneratePDF = (budget: BudgetWithClient, client: Client) => {
     try {
       const pdf = generateBudgetPDF(budget, client, companySettings);
@@ -92,6 +147,24 @@ export default function Orcamentos() {
       toast({
         title: "Erro ao gerar PDF",
         description: "Não foi possível gerar o PDF do orçamento.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditBudget = async (budget: BudgetWithClient) => {
+    try {
+      // Fetch budget items
+      const items = await fetch(`/api/budgets/${budget.id}/items`).then(res => res.json());
+      setEditingBudget({
+        ...budget,
+        items,
+      });
+      setActiveTab("create");
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os dados do orçamento.",
         variant: "destructive",
       });
     }
@@ -133,7 +206,15 @@ export default function Orcamentos() {
         <p className="text-sm md:text-base text-muted-foreground">Gerencie orçamentos e aprovações</p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={(tab) => {
+        setActiveTab(tab);
+        if (tab === "create" && !editingBudget) {
+          // Reset when going to create tab without editing
+        } else if (tab === "list") {
+          // Reset editing state when returning to list
+          setEditingBudget(null);
+        }
+      }}>
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="list" data-testid="tab-budget-list" className="text-xs md:text-sm">
             <FileText className="h-4 w-4 md:mr-2" />
@@ -202,29 +283,52 @@ export default function Orcamentos() {
                       </span>
                     </div>
 
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => client && handleGeneratePDF(budget, client)}
-                        disabled={!client}
-                        data-testid={`button-pdf-${budget.id}`}
-                      >
-                        <FileDown className="h-4 w-4 mr-2" />
-                        <span className="hidden md:inline">Gerar PDF</span>
-                        <span className="md:hidden">PDF</span>
-                      </Button>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditBudget(budget)}
+                          data-testid={`button-edit-${budget.id}`}
+                        >
+                          <Pencil className="h-4 w-4 md:mr-2" />
+                          <span className="hidden md:inline">Editar</span>
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setDeletingBudget(budget.id)}
+                          data-testid={`button-delete-${budget.id}`}
+                        >
+                          <Trash2 className="h-4 w-4 md:mr-2" />
+                          <span className="hidden md:inline">Excluir</span>
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => client && handleGeneratePDF(budget, client)}
+                          disabled={!client}
+                          data-testid={`button-pdf-${budget.id}`}
+                        >
+                          <FileDown className="h-4 w-4 md:mr-2" />
+                          <span className="hidden md:inline">PDF</span>
+                          <span className="md:hidden">PDF</span>
+                        </Button>
+                      </div>
 
                       {budget.status === "draft" && (
                         <Button
-                          className="flex-1"
+                          size="sm"
+                          className="w-full"
                           onClick={() => approveBudgetMutation.mutate(budget.id)}
                           disabled={approveBudgetMutation.isPending}
                           data-testid={`button-approve-${budget.id}`}
                         >
                           <Check className="h-4 w-4 mr-2" />
-                          <span className="hidden md:inline">Aprovar Orçamento</span>
-                          <span className="md:hidden">Aprovar</span>
+                          Aprovar Orçamento
                         </Button>
                       )}
                     </div>
@@ -256,6 +360,8 @@ export default function Orcamentos() {
           <BudgetCreator
             clients={clients}
             products={products}
+            existingBudget={editingBudget || undefined}
+            budgetId={editingBudget?.id}
             onSave={(items, total, client) => {
               const budgetData = {
                 clientId: client.id,
@@ -273,6 +379,22 @@ export default function Orcamentos() {
               };
               saveBudgetMutation.mutate(budgetData);
             }}
+            onUpdate={(budgetId, items, total, client) => {
+              const budgetData = {
+                clientId: client.id,
+                total: total.toString(),
+                items: items.map((item) => ({
+                  productName: item.productName,
+                  type: item.type,
+                  width: item.width?.toString(),
+                  height: item.height?.toString(),
+                  pricePerM2: item.pricePerM2?.toString(),
+                  fixedPrice: item.fixedPrice?.toString(),
+                  subtotal: item.subtotal.toString(),
+                })),
+              };
+              updateBudgetMutation.mutate({ id: budgetId, data: budgetData });
+            }}
             onSendWhatsApp={(items, total, client) => {
               const message = `Olá ${client.name}! Segue o orçamento:\n\nTotal: R$ ${total.toFixed(
                 2
@@ -283,6 +405,27 @@ export default function Orcamentos() {
           />
         </TabsContent>
       </Tabs>
+
+      <AlertDialog open={!!deletingBudget} onOpenChange={() => setDeletingBudget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este orçamento? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deletingBudget && deleteBudgetMutation.mutate(deletingBudget)}
+              data-testid="button-confirm-delete"
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

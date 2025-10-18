@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, FileText, Send, Search, Pencil } from "lucide-react";
-import type { Client, Product } from "@shared/schema";
+import type { Client, Product, Budget, BudgetItem as BudgetItemType } from "@shared/schema";
 import {
   Dialog,
   DialogContent,
@@ -29,11 +29,14 @@ interface BudgetItem {
 interface BudgetCreatorProps {
   clients?: Client[];
   products?: Product[];
+  existingBudget?: Budget & { items?: BudgetItemType[]; client?: Client };
+  budgetId?: string;
   onSave?: (items: BudgetItem[], total: number, client: Client) => void;
+  onUpdate?: (budgetId: string, items: BudgetItem[], total: number, client: Client) => void;
   onSendWhatsApp?: (items: BudgetItem[], total: number, client: Client) => void;
 }
 
-export function BudgetCreator({ clients = [], products = [], onSave, onSendWhatsApp }: BudgetCreatorProps) {
+export function BudgetCreator({ clients = [], products = [], existingBudget, budgetId, onSave, onUpdate, onSendWhatsApp }: BudgetCreatorProps) {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [clientData, setClientData] = useState<Partial<Client>>({
@@ -56,6 +59,38 @@ export function BudgetCreator({ clients = [], products = [], onSave, onSendWhats
       subtotal: 0,
     },
   ]);
+
+  // Load existing budget data when editing
+  useEffect(() => {
+    if (existingBudget) {
+      // Load client
+      if (existingBudget.client) {
+        setSelectedClient(existingBudget.client);
+        setClientData(existingBudget.client);
+      } else if (existingBudget.clientId) {
+        const client = clients.find(c => c.id === existingBudget.clientId);
+        if (client) {
+          setSelectedClient(client);
+          setClientData(client);
+        }
+      }
+      
+      // Load items
+      if (existingBudget.items && existingBudget.items.length > 0) {
+        const loadedItems: BudgetItem[] = existingBudget.items.map((item, index) => ({
+          id: item.id || `${Date.now()}-${index}`,
+          productName: item.productName,
+          type: item.type as "m2" | "fixed" | "service",
+          width: item.width ? parseFloat(item.width) : undefined,
+          height: item.height ? parseFloat(item.height) : undefined,
+          pricePerM2: item.pricePerM2 ? parseFloat(item.pricePerM2) : undefined,
+          fixedPrice: item.fixedPrice ? parseFloat(item.fixedPrice) : undefined,
+          subtotal: parseFloat(item.subtotal),
+        }));
+        setItems(loadedItems);
+      }
+    }
+  }, [existingBudget, clients]);
 
   const handleSelectClient = (clientId: string) => {
     const client = clients.find(c => c.id === clientId);
@@ -438,12 +473,19 @@ export function BudgetCreator({ clients = [], products = [], onSave, onSendWhats
         <CardFooter className="flex gap-3">
           <Button 
             variant="outline" 
-            onClick={() => currentClient && onSave?.(items, total, currentClient)} 
+            onClick={() => {
+              if (!currentClient) return;
+              if (budgetId && onUpdate) {
+                onUpdate(budgetId, items, total, currentClient);
+              } else if (onSave) {
+                onSave(items, total, currentClient);
+              }
+            }}
             data-testid="button-save-budget"
             disabled={!currentClient}
           >
             <FileText className="h-4 w-4 mr-2" />
-            Salvar Orçamento
+            {budgetId ? "Atualizar Orçamento" : "Salvar Orçamento"}
           </Button>
           <Button 
             onClick={() => currentClient && onSendWhatsApp?.(items, total, currentClient)} 

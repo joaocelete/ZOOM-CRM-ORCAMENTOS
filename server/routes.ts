@@ -210,8 +210,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Budget not found" });
       }
       
-      const data = insertBudgetSchema.partial().parse(req.body);
+      const { items, ...budgetData } = req.body;
+      const data = insertBudgetSchema.partial().parse(budgetData);
       const budget = await storage.updateBudget(req.params.id, data);
+      
+      // If items are provided, update them
+      if (items && Array.isArray(items)) {
+        // Delete existing items
+        await storage.deleteBudgetItems(req.params.id);
+        
+        // Create new items
+        const validatedItems = items.map(item => insertBudgetItemSchema.parse(item));
+        for (const item of validatedItems) {
+          await storage.createBudgetItem({
+            ...item,
+            budgetId: budget.id
+          });
+        }
+      }
+      
       res.json(budget);
     } catch (error: any) {
       if (error.name === 'ZodError') {

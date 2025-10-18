@@ -14,6 +14,51 @@ The system enables sales teams to:
 
 ## Recent Implementation (Latest Session - Oct 18, 2025)
 
+### ✅ Completed: Budget Edit & Delete Functionality
+
+**Edit Budget Feature**
+- "Editar" button added to each budget card in the list
+- Clicking edit:
+  - Fetches budget items via GET /api/budgets/:id/items
+  - Switches to "Criar Novo" tab with pre-populated form
+  - BudgetCreator accepts existingBudget and budgetId props
+  - Button changes to "Atualizar Orçamento"
+- Update flow:
+  - Sends PATCH /api/budgets/:id with complete payload
+  - Backend deletes old items and creates new ones
+  - Maintains data integrity with all fields (width, height, pricePerM2, fixedPrice, subtotal)
+  - Returns to list view on success
+
+**Delete Budget Feature**
+- "Excluir" button added to each budget card
+- Confirmation dialog (AlertDialog):
+  - Shows "Confirmar exclusão" title
+  - Requires explicit confirmation to prevent accidents
+  - "Cancelar" preserves budget
+  - "Excluir" executes deletion
+- Delete flow:
+  - Sends DELETE /api/budgets/:id
+  - Backend removes items first, then budget
+  - Shows success toast and removes from list
+
+**Backend Updates**
+- PATCH /api/budgets/:id enhanced to accept items array
+- Items replacement: deletes existing, creates new ones
+- Maintains transaction integrity
+- Full validation with Zod schemas
+
+**Frontend State Management**
+- editingBudget state tracks current edit
+- deletingBudget state for confirmation dialog
+- Tab switching between list and create/edit
+- State resets when switching tabs
+- useEffect loads existing data when editing
+
+**Files Modified:**
+- `server/routes.ts` - Enhanced PATCH endpoint
+- `client/src/components/budget-creator.tsx` - Edit mode support
+- `client/src/pages/orcamentos.tsx` - Edit/delete buttons, mutations, dialogs
+
 ### ✅ Completed: Company Settings & PDF Customization
 
 **Company Settings Page** (/settings)
