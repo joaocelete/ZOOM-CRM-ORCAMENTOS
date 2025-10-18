@@ -4,6 +4,48 @@
 
 Zoom CRM is a custom customer relationship management system designed for the visual communication industry. It manages clients, budgets, sales pipelines (deals), products, and production workflows. This full-stack web application offers an intuitive dashboard-style interface, enabling sales teams to track client relationships, create dynamic budgets, manage deals via a visual Kanban board, maintain a product catalog, monitor production, and generate/send budgets via WhatsApp and PDF. The project aims to provide a comprehensive tool for streamlining visual communication business operations.
 
+## Recent Changes (Oct 18, 2025)
+
+### ✅ Image Crop Tool & Redesigned PDF Layout
+
+**Image Crop Tool for Logo Upload**
+- Added `react-image-crop` library for professional logo editing
+- New `ImageCropDialog` component with intuitive cropping interface
+- Integrated into Settings page - opens automatically after logo upload
+- Users can crop logo to desired size before saving
+- Cropped image stored as base64 in company settings
+- Improved logo quality in PDFs with custom cropping
+
+**Redesigned PDF Layout**
+- **Removed black box** from header - cleaner, more professional look
+- **Logo increased to 50×40px** - prominently displayed and centered at top
+- Simplified header with yellow accent bar
+- Centered "ORÇAMENTO" title with elegant typography
+- Budget info displayed in single line with bullet separators
+- Cleaner overall structure with better visual hierarchy
+- Logo-first design emphasizing company branding
+
+**Files Modified:**
+- `client/src/components/image-crop-dialog.tsx` - New crop component
+- `client/src/pages/settings.tsx` - Integrated crop dialog on upload
+- `client/src/lib/pdf-generator.ts` - Redesigned header layout with larger centered logo
+- `package.json` - Added react-image-crop dependency
+
+### ✅ Enhanced Budget Configuration & Professional PDF
+
+**8 New Configurable Budget Fields:**
+- observations, paymentTerms, warranty, installationIncluded, material, finishing, installationDeadline, validityDays
+- Collapsible "Configurações Adicionais" section in budget form
+- All fields properly saved/loaded in edit mode
+- PDF generator dynamically displays all custom fields
+
+### ✅ Budget Edit & Delete & PDF Fix
+
+**Budget Management:**
+- Edit functionality with item loading
+- Delete with confirmation dialog
+- PDF generation now correctly fetches budget items before rendering
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
