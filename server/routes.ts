@@ -11,7 +11,8 @@ import {
   insertActivitySchema,
   insertTaskSchema,
   insertDealBudgetSchema,
-  insertDealProductSchema
+  insertDealProductSchema,
+  insertCompanySettingsSchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -633,6 +634,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error moving deal stage:', error);
       res.status(500).json({ error: "Failed to move deal stage" });
+    }
+  });
+
+  // ==================== COMPANY SETTINGS ====================
+  app.get("/api/settings", async (req, res) => {
+    try {
+      const settings = await storage.getCompanySettings();
+      res.json(settings || {
+        companyName: "Zoom Comunicação Visual",
+        cnpj: "",
+        address: "",
+        city: "",
+        state: "",
+        zipCode: "",
+        phone: "",
+        email: "",
+        website: "",
+        logo: ""
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch settings" });
+    }
+  });
+
+  app.put("/api/settings", async (req, res) => {
+    try {
+      const data = insertCompanySettingsSchema.parse(req.body);
+      const settings = await storage.updateCompanySettings(data);
+      res.json(settings);
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: "Invalid settings data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to update settings" });
     }
   });
 

@@ -21,6 +21,8 @@ import {
   type InsertDealBudget,
   type DealProduct,
   type InsertDealProduct,
+  type CompanySettings,
+  type InsertCompanySettings,
   users,
   clients,
   products,
@@ -31,7 +33,8 @@ import {
   activities,
   tasks,
   dealBudgets,
-  dealProducts
+  dealProducts,
+  companySettings
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
@@ -103,6 +106,10 @@ export interface IStorage {
   getDealProducts(dealId: string): Promise<DealProduct[]>;
   createDealProduct(product: InsertDealProduct): Promise<DealProduct>;
   deleteDealProduct(id: string): Promise<void>;
+  
+  // Company Settings
+  getCompanySettings(): Promise<CompanySettings | undefined>;
+  updateCompanySettings(settings: InsertCompanySettings): Promise<CompanySettings>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -372,6 +379,34 @@ export class DatabaseStorage implements IStorage {
 
   async deleteDealProduct(id: string): Promise<void> {
     await db.delete(dealProducts).where(eq(dealProducts.id, id));
+  }
+
+  // Company Settings
+  async getCompanySettings(): Promise<CompanySettings | undefined> {
+    const [settings] = await db.select().from(companySettings).limit(1);
+    return settings || undefined;
+  }
+
+  async updateCompanySettings(insertSettings: InsertCompanySettings): Promise<CompanySettings> {
+    // Check if settings exist
+    const existing = await this.getCompanySettings();
+    
+    if (existing) {
+      // Update existing settings
+      const [updated] = await db
+        .update(companySettings)
+        .set({ ...insertSettings, updatedAt: new Date() })
+        .where(eq(companySettings.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      // Create new settings (first time)
+      const [created] = await db
+        .insert(companySettings)
+        .values(insertSettings)
+        .returning();
+      return created;
+    }
   }
 }
 

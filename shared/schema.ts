@@ -142,6 +142,22 @@ export const dealProducts = pgTable("deal_products", {
   subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
 });
 
+// Company Settings (singleton table)
+export const companySettings = pgTable("company_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyName: text("company_name").notNull().default("Zoom Comunicação Visual"),
+  cnpj: text("cnpj"),
+  address: text("address"),
+  city: text("city"),
+  state: text("state"),
+  zipCode: text("zip_code"),
+  phone: text("phone"),
+  email: text("email"),
+  website: text("website"),
+  logo: text("logo"), // base64 encoded image
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -180,6 +196,7 @@ export const insertActivitySchema = createInsertSchema(activities).omit({ id: tr
 export const insertTaskSchema = createInsertSchema(tasks).omit({ id: true, createdAt: true, completedAt: true });
 export const insertDealBudgetSchema = createInsertSchema(dealBudgets).omit({ id: true, createdAt: true });
 export const insertDealProductSchema = createInsertSchema(dealProducts).omit({ id: true });
+export const insertCompanySettingsSchema = createInsertSchema(companySettings).omit({ id: true, updatedAt: true });
 
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -214,3 +231,6 @@ export type DealBudget = typeof dealBudgets.$inferSelect;
 
 export type InsertDealProduct = z.infer<typeof insertDealProductSchema>;
 export type DealProduct = typeof dealProducts.$inferSelect;
+
+export type InsertCompanySettings = z.infer<typeof insertCompanySettingsSchema>;
+export type CompanySettings = typeof companySettings.$inferSelect;
