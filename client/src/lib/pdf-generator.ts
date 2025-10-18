@@ -34,44 +34,73 @@ export function generateBudgetPDF(
   doc.setFillColor(...primaryColor);
   doc.rect(0, 0, pageWidth, 45, "F");
 
-  // LADO ESQUERDO: Logo + Informações da empresa
+  // LADO ESQUERDO: Logo + Informações da empresa (LIMITADO até 130mm)
+  const maxLeftWidth = 130; // Limite para não invadir a direita
+  
   if (companyLogo) {
     try {
-      // Logo mantendo proporção (40x30 - mais largo que alto)
-      doc.addImage(companyLogo, "PNG", 10, 8, 40, 30);
+      // Logo com proporção mais horizontal (45x28 - menos esticado verticalmente)
+      doc.addImage(companyLogo, "PNG", 10, 10, 45, 28);
       
-      // Informações ao lado do logo
+      // Informações ao lado do logo (limitadas)
       doc.setTextColor(0, 0, 0);
-      doc.setFontSize(14);
+      doc.setFontSize(13);
       doc.setFont("helvetica", "bold");
-      doc.text(companyName, 55, 15);
+      const companyNameLines = doc.splitTextToSize(companyName, maxLeftWidth - 60);
+      doc.text(companyNameLines, 60, 14);
       
       doc.setFontSize(7);
       doc.setFont("helvetica", "normal");
-      if (companyPhone) doc.text(`Tel: ${companyPhone}`, 55, 22);
-      if (companyEmail) doc.text(companyEmail, 55, 27);
-      if (companyWebsite) doc.text(companyWebsite, 55, 32);
+      let infoY = 22;
+      if (companyPhone) {
+        const phoneLines = doc.splitTextToSize(`Tel: ${companyPhone}`, maxLeftWidth - 60);
+        doc.text(phoneLines, 60, infoY);
+        infoY += 4;
+      }
+      if (companyEmail) {
+        const emailLines = doc.splitTextToSize(companyEmail, maxLeftWidth - 60);
+        doc.text(emailLines, 60, infoY);
+        infoY += 4;
+      }
+      if (companyWebsite) {
+        const websiteLines = doc.splitTextToSize(companyWebsite, maxLeftWidth - 60);
+        doc.text(websiteLines, 60, infoY);
+      }
     } catch (error) {
       console.error("Error adding logo to PDF:", error);
       doc.setTextColor(0, 0, 0);
-      doc.setFontSize(18);
+      doc.setFontSize(16);
       doc.setFont("helvetica", "bold");
-      doc.text(companyName, 15, 22);
+      const nameLines = doc.splitTextToSize(companyName, maxLeftWidth - 15);
+      doc.text(nameLines, 15, 20);
     }
   } else {
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(18);
+    doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
-    doc.text(companyName, 15, 18);
+    const nameLines = doc.splitTextToSize(companyName, maxLeftWidth - 15);
+    doc.text(nameLines, 15, 16);
     
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
-    if (companyPhone) doc.text(`Tel: ${companyPhone}`, 15, 26);
-    if (companyEmail) doc.text(companyEmail, 15, 31);
-    if (companyWebsite) doc.text(companyWebsite, 15, 36);
+    let infoY = 24;
+    if (companyPhone) {
+      const phoneLines = doc.splitTextToSize(`Tel: ${companyPhone}`, maxLeftWidth - 15);
+      doc.text(phoneLines, 15, infoY);
+      infoY += 4;
+    }
+    if (companyEmail) {
+      const emailLines = doc.splitTextToSize(companyEmail, maxLeftWidth - 15);
+      doc.text(emailLines, 15, infoY);
+      infoY += 4;
+    }
+    if (companyWebsite) {
+      const websiteLines = doc.splitTextToSize(companyWebsite, maxLeftWidth - 15);
+      doc.text(websiteLines, 15, infoY);
+    }
   }
 
-  // LADO DIREITO: Informações do orçamento (SEM BOX)
+  // LADO DIREITO: Informações do orçamento (começa em 135mm)
   doc.setTextColor(0, 0, 0);
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
