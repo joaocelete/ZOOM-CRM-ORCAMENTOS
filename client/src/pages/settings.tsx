@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Settings as SettingsIcon, Upload, Save, Building2 } from "lucide-react";
+import { ImageCropDialog } from "@/components/image-crop-dialog";
 
 export default function Settings() {
   const { toast } = useToast();
@@ -31,6 +32,8 @@ export default function Settings() {
   });
 
   const [logoPreview, setLogoPreview] = useState<string>("");
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState<string>("");
 
   // Update form when settings load
   useEffect(() => {
@@ -101,14 +104,23 @@ export default function Settings() {
       return;
     }
 
-    // Convert to base64
+    // Convert to base64 and open crop dialog
     const reader = new FileReader();
     reader.onload = () => {
       const base64 = reader.result as string;
-      setFormData((prev) => ({ ...prev, logo: base64 }));
-      setLogoPreview(base64);
+      setImageToCrop(base64);
+      setCropDialogOpen(true);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleCropComplete = (croppedImageBase64: string) => {
+    setFormData((prev) => ({ ...prev, logo: croppedImageBase64 }));
+    setLogoPreview(croppedImageBase64);
+    toast({
+      title: "Logo recortado!",
+      description: "Não esqueça de salvar as configurações.",
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -331,6 +343,14 @@ export default function Settings() {
           </Button>
         </div>
       </form>
+
+      {/* Image Crop Dialog */}
+      <ImageCropDialog
+        open={cropDialogOpen}
+        onClose={() => setCropDialogOpen(false)}
+        imageSrc={imageToCrop}
+        onCropComplete={handleCropComplete}
+      />
     </div>
   );
 }

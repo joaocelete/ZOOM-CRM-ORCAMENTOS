@@ -30,78 +30,62 @@ export function generateBudgetPDF(
   const companyState = companySettings?.state || "";
 
   // ============ CABEÇALHO ============
+  // Faixa superior amarela mais fina
   doc.setFillColor(...primaryColor);
-  doc.rect(0, 0, pageWidth, 45, "F");
+  doc.rect(0, 0, pageWidth, 50, "F");
 
-  // Logo maior e mais prominent
+  // Logo GRANDE centralizado no topo
   if (companyLogo) {
     try {
-      // Logo maior e centralizado verticalmente
-      doc.addImage(companyLogo, "PNG", 12, 10, 35, 28);
-      
-      // Nome da empresa e informações
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(18);
-      doc.setFont("helvetica", "bold");
-      doc.text(companyName, 52, 18);
-      
-      doc.setFontSize(8);
-      doc.setFont("helvetica", "normal");
-      let infoY = 24;
-      if (companyPhone) {
-        doc.text(`Tel: ${companyPhone}`, 52, infoY);
-        infoY += 4;
-      }
-      if (companyEmail) {
-        doc.text(companyEmail, 52, infoY);
-        infoY += 4;
-      }
-      if (companyWebsite) {
-        doc.text(companyWebsite, 52, infoY);
-      }
+      // Logo grande e centralizado
+      const logoWidth = 50;
+      const logoHeight = 40;
+      const logoX = (pageWidth - logoWidth) / 2;
+      doc.addImage(companyLogo, "PNG", logoX, 5, logoWidth, logoHeight);
     } catch (error) {
       console.error("Error adding logo to PDF:", error);
+      // Fallback: nome da empresa centralizado
       doc.setTextColor(0, 0, 0);
-      doc.setFontSize(22);
+      doc.setFontSize(24);
       doc.setFont("helvetica", "bold");
-      doc.text(companyName, 15, 25);
+      doc.text(companyName, pageWidth / 2, 25, { align: "center" });
     }
   } else {
+    // Nome da empresa centralizado e grande
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(22);
+    doc.setFontSize(24);
     doc.setFont("helvetica", "bold");
-    doc.text(companyName, 15, 20);
-    
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    let infoY = 28;
-    if (companyPhone) {
-      doc.text(`Tel: ${companyPhone}`, 15, infoY);
-      infoY += 4;
-    }
-    if (companyEmail) {
-      doc.text(companyEmail, 15, infoY);
-    }
+    doc.text(companyName, pageWidth / 2, 25, { align: "center" });
   }
 
-  // Título ORÇAMENTO (box destacado)
-  doc.setFillColor(0, 0, 0);
-  doc.rect(pageWidth - 60, 8, 50, 30, "F");
-  
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(14);
-  doc.setFont("helvetica", "bold");
-  doc.text("ORÇAMENTO", pageWidth - 35, 16, { align: "center" });
-  
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
-  const budgetNumber = budget.id.substring(0, 8).toUpperCase();
-  doc.text(`Nº ${budgetNumber}`, pageWidth - 35, 23, { align: "center" });
-  doc.text(new Date(budget.createdAt!).toLocaleDateString("pt-BR"), pageWidth - 35, 28, { align: "center" });
-  const validityDays = budget.validityDays || 7;
-  doc.text(`Validade: ${validityDays} dias`, pageWidth - 35, 33, { align: "center" });
-
   yPos = 55;
+
+  // Linha separadora
+  doc.setDrawColor(...borderGray);
+  doc.setLineWidth(0.5);
+  doc.line(15, yPos, pageWidth - 15, yPos);
+  
+  yPos += 8;
+
+  // Título ORÇAMENTO simples e elegante
+  doc.setTextColor(...darkGray);
+  doc.setFontSize(20);
+  doc.setFont("helvetica", "bold");
+  doc.text("ORÇAMENTO", pageWidth / 2, yPos, { align: "center" });
+  
+  yPos += 8;
+  
+  // Informações do orçamento em linha
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...mediumGray);
+  const budgetNumber = budget.id.substring(0, 8).toUpperCase();
+  const budgetDate = new Date(budget.createdAt!).toLocaleDateString("pt-BR");
+  const validityDays = budget.validityDays || 7;
+  const budgetInfo = `Nº ${budgetNumber} • ${budgetDate} • Validade: ${validityDays} dias`;
+  doc.text(budgetInfo, pageWidth / 2, yPos, { align: "center" });
+
+  yPos += 10;
 
   // ============ DADOS DO CLIENTE ============
   doc.setFillColor(...lightGray);
