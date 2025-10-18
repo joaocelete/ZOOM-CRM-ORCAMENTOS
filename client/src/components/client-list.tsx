@@ -2,6 +2,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -9,7 +16,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, Plus, Phone, Mail, MapPin, Pencil, Trash2, History } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Search,
+  Plus,
+  Phone,
+  Mail,
+  MapPin,
+  Pencil,
+  Trash2,
+  History,
+  MailPlus,
+  MoreVertical,
+  MessagesSquare,
+} from "lucide-react";
 import type { Client } from "@shared/schema";
 
 interface ClientListProps {
@@ -22,6 +47,12 @@ interface ClientListProps {
 
 export function ClientList({ clients, onEdit, onDelete, onAdd, onViewTimeline }: ClientListProps) {
   const [search, setSearch] = useState("");
+  const [stateFilter, setStateFilter] = useState<string>("all");
+  const [contactFilter, setContactFilter] = useState<string>("all");
+
+  const states = Array.from(
+    new Set(clients.map((client) => client.state).filter((value): value is string => Boolean(value)))
+  ).sort();
 
   const filteredClients = clients.filter(
     (client) =>
@@ -35,10 +66,25 @@ export function ClientList({ clients, onEdit, onDelete, onAdd, onViewTimeline }:
     window.open(`https://wa.me/55${cleanPhone}`, "_blank");
   };
 
+  const handleEmail = (client: Client) => {
+    if (client.email) {
+      window.location.href = `mailto:${client.email}`;
+    }
+  };
+
+  const filteredAndSortedClients = filteredClients.filter((client) => {
+    const matchesState = stateFilter === "all" || client.state === stateFilter;
+    const matchesContact =
+      contactFilter === "all" ||
+      (contactFilter === "withEmail" && Boolean(client.email)) ||
+      (contactFilter === "withoutEmail" && !client.email);
+    return matchesState && matchesContact;
+  });
+
   return (
     <div className="space-y-4">
-      <div className="flex flex-col md:flex-row gap-3">
-        <div className="relative flex-1">
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+        <div className="relative md:col-span-2">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Buscar por nome, empresa ou cidade..."
@@ -48,6 +94,29 @@ export function ClientList({ clients, onEdit, onDelete, onAdd, onViewTimeline }:
             data-testid="input-search-clients"
           />
         </div>
+        <Select value={stateFilter} onValueChange={setStateFilter}>
+          <SelectTrigger data-testid="select-state-filter">
+            <SelectValue placeholder="Filtrar por estado" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os estados</SelectItem>
+            {states.map((state) => (
+              <SelectItem key={state} value={state}>
+                {state}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={contactFilter} onValueChange={setContactFilter}>
+          <SelectTrigger data-testid="select-contact-filter">
+            <SelectValue placeholder="Contato" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os contatos</SelectItem>
+            <SelectItem value="withEmail">Com e-mail</SelectItem>
+            <SelectItem value="withoutEmail">Sem e-mail</SelectItem>
+          </SelectContent>
+        </Select>
         <Button onClick={onAdd} className="w-full md:w-auto" data-testid="button-add-client">
           <Plus className="h-4 w-4 mr-2" />
           Novo Cliente
@@ -58,18 +127,32 @@ export function ClientList({ clients, onEdit, onDelete, onAdd, onViewTimeline }:
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Cliente</TableHead>
+              <TableHead className="w-[220px]">Cliente</TableHead>
               <TableHead>Empresa</TableHead>
               <TableHead>Telefone</TableHead>
-              <TableHead>Email</TableHead>
+              <TableHead>E-mail</TableHead>
               <TableHead>Cidade / Estado</TableHead>
-              <TableHead className="w-[220px]">Ações</TableHead>
+              <TableHead className="w-[180px] text-center">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredClients.map((client) => (
-              <TableRow key={client.id} data-testid={`client-card-${client.id}`}>
-                <TableCell className="font-medium">{client.name}</TableCell>
+            {filteredAndSortedClients.map((client) => (
+              <TableRow
+                key={client.id}
+                data-testid={`client-card-${client.id}`}
+                className="cursor-pointer hover:bg-muted/70"
+                onClick={() => onEdit?.(client)}
+              >
+                <TableCell className="font-medium">
+                  <div className="flex flex-col">
+                    <span>{client.name}</span>
+                    {client.notes && (
+                      <span className="text-xs text-muted-foreground line-clamp-1">
+                        {client.notes}
+                      </span>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell>{client.company || "-"}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
@@ -96,49 +179,73 @@ export function ClientList({ clients, onEdit, onDelete, onAdd, onViewTimeline }:
                     </span>
                   </div>
                 </TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => openWhatsApp(client.phone)}
-                      data-testid={`button-whatsapp-${client.id}`}
-                    >
-                      WhatsApp
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => onViewTimeline?.(client.id)}
-                      data-testid={`button-timeline-${client.id}`}
-                    >
-                      <History className="h-4 w-4 mr-2" />
-                      Timeline
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => onEdit?.(client)}
-                      data-testid={`button-edit-${client.id}`}
-                      aria-label="Editar cliente"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => onDelete?.(client.id)}
-                      data-testid={`button-delete-${client.id}`}
-                      aria-label="Excluir cliente"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                <TableCell className="text-center">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={(event) => event.stopPropagation()}
+                        aria-label="Opções do cliente"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onEdit?.(client);
+                        }}
+                      >
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Editar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onViewTimeline?.(client.id);
+                        }}
+                      >
+                        <History className="mr-2 h-4 w-4" />
+                        Ver timeline
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          openWhatsApp(client.phone);
+                        }}
+                      >
+                        <MessagesSquare className="mr-2 h-4 w-4" />
+                        WhatsApp
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        disabled={!client.email}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleEmail(client);
+                        }}
+                      >
+                        <MailPlus className="mr-2 h-4 w-4" />
+                        Enviar e-mail
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onDelete?.(client.id);
+                        }}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Excluir
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}
 
-            {filteredClients.length === 0 && (
+            {filteredAndSortedClients.length === 0 && (
               <TableRow>
                 <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                   Nenhum cliente encontrado

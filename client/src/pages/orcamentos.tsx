@@ -135,15 +135,21 @@ export default function Orcamentos() {
     },
   });
 
-  const handleGeneratePDF = (budget: BudgetWithClient, client: Client) => {
+  const handleGeneratePDF = async (budget: BudgetWithClient, client: Client) => {
     try {
-      const pdf = generateBudgetPDF(budget, client, companySettings);
+      // Buscar os items do orçamento
+      const items = await fetch(`/api/budgets/${budget.id}/items`).then(res => res.json());
+      
+      // Gerar o PDF com os items
+      const budgetWithItems = { ...budget, items };
+      const pdf = generateBudgetPDF(budgetWithItems, client, companySettings);
       pdf.save(`Orcamento_${client.name.replace(/\s+/g, "_")}_${new Date().toLocaleDateString("pt-BR").replace(/\//g, "-")}.pdf`);
       toast({
         title: "PDF gerado!",
         description: "O orçamento foi baixado com sucesso.",
       });
     } catch (error) {
+      console.error("Erro ao gerar PDF:", error);
       toast({
         title: "Erro ao gerar PDF",
         description: "Não foi possível gerar o PDF do orçamento.",

@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Pencil, Trash2 } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, CopyPlus, MoreVertical } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -11,6 +10,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { Product } from "@shared/schema";
 
 interface ProductListProps {
@@ -24,6 +37,7 @@ export function ProductList({ products, onEdit, onDelete, onAdd }: ProductListPr
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("name");
 
   const categories = Array.from(new Set(products.map((p) => p.category).filter(Boolean)));
   
@@ -37,6 +51,16 @@ export function ProductList({ products, onEdit, onDelete, onAdd }: ProductListPr
     const matchesType = typeFilter === "all" || product.type === typeFilter;
     
     return matchesSearch && matchesCategory && matchesType;
+  });
+
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    if (sortBy === "price") {
+      const priceA = Number(a.fixedPrice || a.pricePerM2 || 0);
+      const priceB = Number(b.fixedPrice || b.pricePerM2 || 0);
+      return priceB - priceA;
+    }
+
+    return a.name.localeCompare(b.name);
   });
 
   const getTypeLabel = (type: string) => {
@@ -60,8 +84,8 @@ export function ProductList({ products, onEdit, onDelete, onAdd }: ProductListPr
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col md:flex-row gap-3">
-        <div className="relative flex-1">
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
+        <div className="relative md:col-span-2">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Buscar produtos..."
@@ -71,9 +95,8 @@ export function ProductList({ products, onEdit, onDelete, onAdd }: ProductListPr
             data-testid="input-search-products"
           />
         </div>
-        
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-full md:w-[180px]" data-testid="select-category-filter">
+          <SelectTrigger data-testid="select-category-filter">
             <SelectValue placeholder="Categoria" />
           </SelectTrigger>
           <SelectContent>
@@ -87,7 +110,7 @@ export function ProductList({ products, onEdit, onDelete, onAdd }: ProductListPr
         </Select>
 
         <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-full md:w-[180px]" data-testid="select-type-filter">
+          <SelectTrigger data-testid="select-type-filter">
             <SelectValue placeholder="Tipo" />
           </SelectTrigger>
           <SelectContent>
@@ -97,71 +120,129 @@ export function ProductList({ products, onEdit, onDelete, onAdd }: ProductListPr
             <SelectItem value="service">Serviço</SelectItem>
           </SelectContent>
         </Select>
-        
-        <Button onClick={onAdd} className="w-full md:w-auto" data-testid="button-add-product">
+
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger data-testid="select-sort-products">
+            <SelectValue placeholder="Ordenação" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="name">Ordenar por nome</SelectItem>
+            <SelectItem value="price">Ordenar por preço</SelectItem>
+          </SelectContent>
+        </Select>
+        <Button onClick={onAdd} className="w-full" data-testid="button-add-product">
           <Plus className="h-4 w-4 mr-2" />
           Novo Produto
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredProducts.map((product) => (
-          <Card key={product.id} className="hover-elevate" data-testid={`product-card-${product.id}`}>
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1">
-                  <CardTitle className="text-base font-semibold">{product.name}</CardTitle>
-                  {product.category && (
-                    <Badge variant="secondary" className="mt-2">
-                      {product.category}
-                    </Badge>
+      <div className="overflow-hidden rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[260px]">Produto</TableHead>
+              <TableHead>Categoria</TableHead>
+              <TableHead>Tipo</TableHead>
+              <TableHead>Preço</TableHead>
+              <TableHead>Prazo produção</TableHead>
+              <TableHead className="w-[140px] text-center">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sortedProducts.map((product) => (
+              <TableRow
+                key={product.id}
+                data-testid={`product-card-${product.id}`}
+                className="cursor-pointer hover:bg-muted/70"
+                onClick={() => onEdit?.(product)}
+              >
+                <TableCell>
+                  <div className="flex flex-col gap-1">
+                    <span className="font-medium">{product.name}</span>
+                    {product.description && (
+                      <span className="text-xs text-muted-foreground line-clamp-2">
+                        {product.description}
+                      </span>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {product.category ? (
+                    <Badge variant="secondary">{product.category}</Badge>
+                  ) : (
+                    <span className="text-muted-foreground">-</span>
                   )}
-                </div>
-                <div className="flex gap-1">
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => onEdit?.(product)}
-                    data-testid={`button-edit-product-${product.id}`}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => onDelete?.(product.id)}
-                    data-testid={`button-delete-product-${product.id}`}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {product.description && (
-                <p className="text-sm text-muted-foreground line-clamp-2">{product.description}</p>
-              )}
-              <div className="flex items-center justify-between pt-2">
-                <Badge variant="outline">{getTypeLabel(product.type)}</Badge>
-                <p className="font-semibold text-primary">{getPrice(product)}</p>
-              </div>
-              {product.productionTime && (
-                <p className="text-xs text-muted-foreground">
-                  Prazo: {product.productionTime} dias úteis
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                </TableCell>
+                <TableCell>
+                  <Badge variant="outline">{getTypeLabel(product.type)}</Badge>
+                </TableCell>
+                <TableCell className="font-semibold text-primary">
+                  {getPrice(product)}
+                </TableCell>
+                <TableCell>
+                  {product.productionTime ? (
+                    `${product.productionTime} dias úteis`
+                  ) : (
+                    <span className="text-muted-foreground">Sob consulta</span>
+                  )}
+                </TableCell>
+                <TableCell className="text-center">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={(event) => event.stopPropagation()}
+                        aria-label="Opções do produto"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onEdit?.(product);
+                        }}
+                      >
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Editar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          navigator.clipboard.writeText(product.name).catch(() => {});
+                        }}
+                      >
+                        <CopyPlus className="mr-2 h-4 w-4" />
+                        Copiar nome
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onDelete?.(product.id);
+                        }}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Excluir
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
 
-      {filteredProducts.length === 0 && (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-muted-foreground">Nenhum produto encontrado</p>
-          </CardContent>
-        </Card>
-      )}
+            {sortedProducts.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                  Nenhum produto encontrado
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }
