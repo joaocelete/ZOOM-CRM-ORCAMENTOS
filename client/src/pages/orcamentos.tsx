@@ -315,8 +315,17 @@ export default function Orcamentos() {
                           variant="outline"
                           size="sm"
                           className="flex-1"
-                          onClick={() => client && handleGeneratePDF(budget, client)}
-                          disabled={!client}
+                          onClick={() => {
+                            if (!client) {
+                              toast({
+                                title: "Erro",
+                                description: "Cliente não encontrado para este orçamento.",
+                                variant: "destructive",
+                              });
+                              return;
+                            }
+                            handleGeneratePDF(budget, client);
+                          }}
                           data-testid={`button-pdf-${budget.id}`}
                         >
                           <FileDown className="h-4 w-4 md:mr-2" />
