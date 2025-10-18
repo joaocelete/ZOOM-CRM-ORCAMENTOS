@@ -436,12 +436,15 @@ export function generateBudgetPDF(
     }
     
     doc.setFont("helvetica", "bold");
+    doc.setTextColor(...darkGray);
     doc.text(`• ${condition.title}`, 20, yPos);
     doc.setFont("helvetica", "normal");
     
     const lines = doc.splitTextToSize(condition.text, pageWidth - 50);
-    doc.text(lines, 25, yPos + 4);
-    yPos += 4 + (lines.length * 4) + 2;
+    doc.text(lines, 25, yPos + 5);
+    
+    // Espaçamento maior entre itens: 5mm inicial + 5mm por linha + 4mm extra no final
+    yPos += 5 + (lines.length * 5) + 4;
   });
 
   // ============ RODAPÉ ============
