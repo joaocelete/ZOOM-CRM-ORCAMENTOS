@@ -30,62 +30,89 @@ export function generateBudgetPDF(
   const companyState = companySettings?.state || "";
 
   // ============ CABEÇALHO ============
-  // Faixa superior amarela mais fina
+  // Faixa amarela superior com gradiente visual
   doc.setFillColor(...primaryColor);
-  doc.rect(0, 0, pageWidth, 50, "F");
+  doc.rect(0, 0, pageWidth, 45, "F");
 
-  // Logo GRANDE centralizado no topo
+  // Logo GRANDE à esquerda com mais destaque
   if (companyLogo) {
     try {
-      // Logo grande e centralizado
-      const logoWidth = 50;
-      const logoHeight = 40;
-      const logoX = (pageWidth - logoWidth) / 2;
-      doc.addImage(companyLogo, "PNG", logoX, 5, logoWidth, logoHeight);
+      doc.addImage(companyLogo, "PNG", 15, 8, 50, 40);
+      
+      // Informações da empresa ao lado do logo
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(18);
+      doc.setFont("helvetica", "bold");
+      doc.text(companyName, 70, 18);
+      
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      let infoY = 25;
+      if (companyPhone) {
+        doc.text(`Tel: ${companyPhone}`, 70, infoY);
+        infoY += 4;
+      }
+      if (companyEmail) {
+        doc.text(companyEmail, 70, infoY);
+        infoY += 4;
+      }
+      if (companyWebsite) {
+        doc.text(companyWebsite, 70, infoY);
+      }
     } catch (error) {
       console.error("Error adding logo to PDF:", error);
-      // Fallback: nome da empresa centralizado
       doc.setTextColor(0, 0, 0);
-      doc.setFontSize(24);
+      doc.setFontSize(22);
       doc.setFont("helvetica", "bold");
-      doc.text(companyName, pageWidth / 2, 25, { align: "center" });
+      doc.text(companyName, 15, 25);
     }
   } else {
-    // Nome da empresa centralizado e grande
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(24);
+    doc.setFontSize(22);
     doc.setFont("helvetica", "bold");
-    doc.text(companyName, pageWidth / 2, 25, { align: "center" });
+    doc.text(companyName, 15, 20);
+    
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    let infoY = 28;
+    if (companyPhone) {
+      doc.text(`Tel: ${companyPhone}`, 15, infoY);
+      infoY += 4;
+    }
+    if (companyEmail) {
+      doc.text(companyEmail, 15, infoY);
+    }
   }
 
-  yPos = 55;
-
-  // Linha separadora
-  doc.setDrawColor(...borderGray);
-  doc.setLineWidth(0.5);
-  doc.line(15, yPos, pageWidth - 15, yPos);
+  // Box de informações do orçamento à direita (SEM FUNDO PRETO - com borda elegante)
+  const boxX = pageWidth - 62;
+  const boxY = 8;
+  const boxWidth = 52;
+  const boxHeight = 32;
   
-  yPos += 8;
-
-  // Título ORÇAMENTO simples e elegante
+  // Borda do box com cor amarela
+  doc.setDrawColor(...primaryColor);
+  doc.setLineWidth(1.5);
+  doc.setFillColor(255, 255, 255); // Fundo branco
+  doc.rect(boxX, boxY, boxWidth, boxHeight, "FD");
+  
+  // Título ORÇAMENTO
   doc.setTextColor(...darkGray);
-  doc.setFontSize(20);
+  doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
-  doc.text("ORÇAMENTO", pageWidth / 2, yPos, { align: "center" });
+  doc.text("ORÇAMENTO", pageWidth - 35, 16, { align: "center" });
   
-  yPos += 8;
-  
-  // Informações do orçamento em linha
-  doc.setFontSize(9);
+  // Informações do orçamento
+  doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...mediumGray);
   const budgetNumber = budget.id.substring(0, 8).toUpperCase();
-  const budgetDate = new Date(budget.createdAt!).toLocaleDateString("pt-BR");
+  doc.text(`Nº ${budgetNumber}`, pageWidth - 35, 23, { align: "center" });
+  doc.text(new Date(budget.createdAt!).toLocaleDateString("pt-BR"), pageWidth - 35, 28, { align: "center" });
   const validityDays = budget.validityDays || 7;
-  const budgetInfo = `Nº ${budgetNumber} • ${budgetDate} • Validade: ${validityDays} dias`;
-  doc.text(budgetInfo, pageWidth / 2, yPos, { align: "center" });
+  doc.text(`Validade: ${validityDays} dias`, pageWidth - 35, 33, { align: "center" });
 
-  yPos += 10;
+  yPos = 55;
 
   // ============ DADOS DO CLIENTE ============
   doc.setFillColor(...lightGray);
