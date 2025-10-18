@@ -5,6 +5,9 @@ import { DealsStatusChart } from "@/components/deals-status-chart";
 import { DealsValueByStageChart } from "@/components/deals-value-by-stage-chart";
 import { SalesTrendChart } from "@/components/sales-trend-chart";
 import type { Deal, Client, Budget } from "@shared/schema";
+import { Button } from "@/components/ui/button";
+import { Settings } from "lucide-react";
+import { Link } from "wouter";
 
 export default function Dashboard() {
   const { data: deals = [], isLoading: dealsLoading, error: dealsError } = useQuery<Deal[]>({
@@ -66,9 +69,22 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-4 md:space-y-6" data-testid="page-dashboard">
-      <div>
-        <h1 className="font-serif text-2xl md:text-3xl font-bold">Dashboard</h1>
-        <p className="text-sm md:text-base text-muted-foreground">Visão geral do seu negócio</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-2xl md:text-3xl font-bold">Dashboard</h1>
+          <p className="text-sm md:text-base text-muted-foreground">Visão geral do seu negócio</p>
+        </div>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="text-muted-foreground hover:text-foreground"
+          data-testid="button-settings-dashboard"
+          asChild
+        >
+          <Link href="/settings">
+            <Settings className="h-5 w-5" />
+          </Link>
+        </Button>
       </div>
 
       <DashboardMetrics

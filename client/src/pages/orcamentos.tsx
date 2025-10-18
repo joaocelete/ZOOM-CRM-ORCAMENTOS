@@ -176,7 +176,7 @@ export default function Orcamentos() {
           ) : (
             <div className="grid gap-3 md:gap-4 md:grid-cols-2">
               {filteredBudgets.map((budget) => {
-                const client = clients.find((c) => c.id === budget.clientId);
+                const client = budget.client || clients.find((c) => c.id === budget.clientId);
                 const statusInfo = getStatusLabel(budget.status);
 
                 return (

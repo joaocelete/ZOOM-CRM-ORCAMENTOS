@@ -139,7 +139,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/budgets", async (req, res) => {
     try {
       const budgets = await storage.getBudgets();
-      res.json(budgets);
+      const clients = await storage.getClients();
+      
+      // Attach client data to each budget
+      const budgetsWithClients = budgets.map(budget => ({
+        ...budget,
+        client: clients.find(c => c.id === budget.clientId) || null,
+      }));
+      
+      res.json(budgetsWithClients);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch budgets" });
     }
