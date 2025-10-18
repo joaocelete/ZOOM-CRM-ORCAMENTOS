@@ -31,56 +31,77 @@ export function generateBudgetPDF(
 
   // ============ CABEÇALHO ============
   doc.setFillColor(...primaryColor);
-  doc.rect(0, 0, pageWidth, 35, "F");
+  doc.rect(0, 0, pageWidth, 45, "F");
 
-  // Logo ou nome da empresa
+  // Logo maior e mais prominent
   if (companyLogo) {
     try {
-      doc.addImage(companyLogo, "PNG", 15, 8, 25, 20);
+      // Logo maior e centralizado verticalmente
+      doc.addImage(companyLogo, "PNG", 12, 10, 35, 28);
       
-      // Nome da empresa ao lado da logo
+      // Nome da empresa e informações
       doc.setTextColor(0, 0, 0);
-      doc.setFontSize(16);
+      doc.setFontSize(18);
       doc.setFont("helvetica", "bold");
-      doc.text(companyName, 45, 18);
+      doc.text(companyName, 52, 18);
       
       doc.setFontSize(8);
       doc.setFont("helvetica", "normal");
-      if (companyPhone) doc.text(`Tel: ${companyPhone}`, 45, 23);
-      if (companyEmail) doc.text(companyEmail, 45, 27);
+      let infoY = 24;
+      if (companyPhone) {
+        doc.text(`Tel: ${companyPhone}`, 52, infoY);
+        infoY += 4;
+      }
+      if (companyEmail) {
+        doc.text(companyEmail, 52, infoY);
+        infoY += 4;
+      }
+      if (companyWebsite) {
+        doc.text(companyWebsite, 52, infoY);
+      }
     } catch (error) {
       console.error("Error adding logo to PDF:", error);
       doc.setTextColor(0, 0, 0);
-      doc.setFontSize(20);
+      doc.setFontSize(22);
       doc.setFont("helvetica", "bold");
-      doc.text(companyName, 15, 20);
+      doc.text(companyName, 15, 25);
     }
   } else {
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(20);
+    doc.setFontSize(22);
     doc.setFont("helvetica", "bold");
-    doc.text(companyName, 15, 18);
+    doc.text(companyName, 15, 20);
     
-    doc.setFontSize(8);
+    doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    if (companyPhone) doc.text(`Tel: ${companyPhone}`, 15, 24);
-    if (companyEmail) doc.text(companyEmail, 15, 28);
+    let infoY = 28;
+    if (companyPhone) {
+      doc.text(`Tel: ${companyPhone}`, 15, infoY);
+      infoY += 4;
+    }
+    if (companyEmail) {
+      doc.text(companyEmail, 15, infoY);
+    }
   }
 
-  // Título ORÇAMENTO
-  doc.setTextColor(0, 0, 0);
-  doc.setFontSize(18);
-  doc.setFont("helvetica", "bold");
-  doc.text("ORÇAMENTO", pageWidth - 15, 15, { align: "right" });
+  // Título ORÇAMENTO (box destacado)
+  doc.setFillColor(0, 0, 0);
+  doc.rect(pageWidth - 60, 8, 50, 30, "F");
   
-  doc.setFontSize(9);
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.text("ORÇAMENTO", pageWidth - 35, 16, { align: "center" });
+  
+  doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   const budgetNumber = budget.id.substring(0, 8).toUpperCase();
-  doc.text(`Nº ${budgetNumber}`, pageWidth - 15, 22, { align: "right" });
-  doc.text(`Data: ${new Date(budget.createdAt!).toLocaleDateString("pt-BR")}`, pageWidth - 15, 27, { align: "right" });
-  doc.text(`Validade: 7 dias`, pageWidth - 15, 32, { align: "right" });
+  doc.text(`Nº ${budgetNumber}`, pageWidth - 35, 23, { align: "center" });
+  doc.text(new Date(budget.createdAt!).toLocaleDateString("pt-BR"), pageWidth - 35, 28, { align: "center" });
+  const validityDays = budget.validityDays || 7;
+  doc.text(`Validade: ${validityDays} dias`, pageWidth - 35, 33, { align: "center" });
 
-  yPos = 45;
+  yPos = 55;
 
   // ============ DADOS DO CLIENTE ============
   doc.setFillColor(...lightGray);
@@ -284,6 +305,44 @@ export function generateBudgetPDF(
 
   yPos += 18;
 
+  // ============ ESPECIFICAÇÕES TÉCNICAS ============
+  if (budget.material || budget.finishing) {
+    if (yPos > 220) {
+      addFooter(doc, pageWidth, pageHeight, companyName, companyPhone, companyEmail, companyWebsite, companyCNPJ, companyAddress, companyCity, companyState, darkGray, mediumGray);
+      doc.addPage();
+      yPos = 20;
+    }
+
+    doc.setFillColor(...lightGray);
+    doc.rect(15, yPos, pageWidth - 30, 8, "FD");
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...darkGray);
+    doc.text("ESPECIFICAÇÕES TÉCNICAS", 20, yPos + 5.5);
+    yPos += 10;
+
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    
+    if (budget.material) {
+      doc.setFont("helvetica", "bold");
+      doc.text("Material:", 20, yPos);
+      doc.setFont("helvetica", "normal");
+      doc.text(budget.material, 42, yPos);
+      yPos += 5;
+    }
+    
+    if (budget.finishing) {
+      doc.setFont("helvetica", "bold");
+      doc.text("Acabamento:", 20, yPos);
+      doc.setFont("helvetica", "normal");
+      doc.text(budget.finishing, 42, yPos);
+      yPos += 5;
+    }
+    
+    yPos += 3;
+  }
+
   // ============ CONDIÇÕES COMERCIAIS ============
   if (yPos > 220) {
     addFooter(doc, pageWidth, pageHeight, companyName, companyPhone, companyEmail, companyWebsite, companyCNPJ, companyAddress, companyCity, companyState, darkGray, mediumGray);
@@ -291,37 +350,69 @@ export function generateBudgetPDF(
     yPos = 20;
   }
 
-  doc.setFontSize(11);
+  doc.setFillColor(...lightGray);
+  doc.rect(15, yPos, pageWidth - 30, 8, "FD");
+  doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...darkGray);
-  doc.text("CONDIÇÕES COMERCIAIS", 15, yPos);
-  yPos += 7;
+  doc.text("CONDIÇÕES COMERCIAIS", 20, yPos + 5.5);
+  yPos += 10;
 
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
 
-  const conditions = [
-    {
-      title: "Prazo de Execução:",
-      text: `${budget.deliveryTime || "5-7"} dias úteis após aprovação do orçamento e confirmação de pagamento.`
-    },
-    {
-      title: "Forma de Pagamento:",
-      text: "50% de entrada na aprovação + 50% na entrega/conclusão da instalação."
-    },
-    {
-      title: "Validade da Proposta:",
-      text: "Este orçamento tem validade de 7 dias corridos a partir da data de emissão."
-    },
-    {
-      title: "Garantia:",
-      text: "6 meses contra defeitos de fabricação e instalação."
-    },
-    {
-      title: "Observações:",
-      text: "Valores incluem material, mão de obra e impostos. Emissão de NF-e conforme legislação vigente."
+  const conditions = [];
+  
+  // Prazo de execução
+  conditions.push({
+    title: "Prazo de Execução:",
+    text: `${budget.deliveryTime || "5-7"} dias úteis após aprovação do orçamento e confirmação de pagamento.`
+  });
+  
+  // Forma de pagamento
+  conditions.push({
+    title: "Forma de Pagamento:",
+    text: budget.paymentTerms || "50% de entrada na aprovação + 50% na entrega/conclusão da instalação."
+  });
+  
+  // Instalação
+  if (budget.installationIncluded) {
+    const installText = budget.installationIncluded === "yes" 
+      ? "Instalação incluída no valor do orçamento."
+      : budget.installationIncluded === "optional"
+      ? "Instalação disponível mediante cotação separada."
+      : "Instalação não incluída.";
+    
+    let fullInstallText = installText;
+    if (budget.installationDeadline && budget.installationIncluded === "yes") {
+      fullInstallText += ` Prazo de instalação: ${budget.installationDeadline}.`;
     }
-  ];
+    
+    conditions.push({
+      title: "Instalação:",
+      text: fullInstallText
+    });
+  }
+  
+  // Validade
+  const validityDaysText = budget.validityDays || 7;
+  conditions.push({
+    title: "Validade da Proposta:",
+    text: `Este orçamento tem validade de ${validityDaysText} dias corridos a partir da data de emissão.`
+  });
+  
+  // Garantia
+  conditions.push({
+    title: "Garantia:",
+    text: budget.warranty || "6 meses contra defeitos de fabricação e instalação."
+  });
+  
+  // Observações customizadas ou padrão
+  const obsText = budget.observations || "Valores incluem material, mão de obra e impostos. Emissão de NF-e conforme legislação vigente.";
+  conditions.push({
+    title: "Observações:",
+    text: obsText
+  });
 
   conditions.forEach(condition => {
     if (yPos > 250) {

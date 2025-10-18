@@ -49,6 +49,17 @@ export const budgets = pgTable("budgets", {
   total: decimal("total", { precision: 10, scale: 2 }).notNull(),
   status: text("status").notNull(), // 'draft', 'sent', 'approved', 'rejected'
   deliveryTime: text("delivery_time"),
+  
+  // Additional configuration fields
+  observations: text("observations"), // Observações gerais do orçamento
+  paymentTerms: text("payment_terms"), // Condições de pagamento customizadas
+  warranty: text("warranty"), // Garantia customizada
+  installationIncluded: text("installation_included"), // 'yes', 'no', 'optional'
+  material: text("material"), // Material principal (lona, vinil, ACM, etc.)
+  finishing: text("finishing"), // Acabamento (ilhoses, laminação, etc.)
+  installationDeadline: text("installation_deadline"), // Prazo para instalação
+  validityDays: integer("validity_days"), // Validade do orçamento em dias
+  
   createdAt: timestamp("created_at").defaultNow(),
 });
 

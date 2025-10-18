@@ -1,8 +1,14 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Search, Plus, Phone, Mail, MapPin, Pencil, Trash2, History } from "lucide-react";
 import type { Client } from "@shared/schema";
 
@@ -48,92 +54,100 @@ export function ClientList({ clients, onEdit, onDelete, onAdd, onViewTimeline }:
         </Button>
       </div>
 
-      <div className="grid gap-3 md:gap-4 md:grid-cols-2">
-        {filteredClients.map((client) => (
-          <Card key={client.id} className="hover-elevate" data-testid={`client-card-${client.id}`}>
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1">
-                  <CardTitle className="text-base font-semibold">{client.name}</CardTitle>
-                  {client.company && (
-                    <p className="text-sm text-muted-foreground mt-1">{client.company}</p>
+      <div className="overflow-hidden rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Cliente</TableHead>
+              <TableHead>Empresa</TableHead>
+              <TableHead>Telefone</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Cidade / Estado</TableHead>
+              <TableHead className="w-[220px]">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredClients.map((client) => (
+              <TableRow key={client.id} data-testid={`client-card-${client.id}`}>
+                <TableCell className="font-medium">{client.name}</TableCell>
+                <TableCell>{client.company || "-"}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span>{client.phone}</span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {client.email ? (
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <span className="truncate">{client.email}</span>
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground">-</span>
                   )}
-                </div>
-                <div className="flex gap-1">
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => onEdit?.(client)}
-                    data-testid={`button-edit-${client.id}`}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => onDelete?.(client.id)}
-                    data-testid={`button-delete-${client.id}`}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex flex-col md:flex-row md:items-center gap-2 text-sm">
-                <div className="flex items-center gap-2 flex-1">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span>{client.phone}</span>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => openWhatsApp(client.phone)}
-                    data-testid={`button-whatsapp-${client.id}`}
-                    className="text-xs flex-1 md:flex-none"
-                  >
-                    WhatsApp
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => onViewTimeline?.(client.id)}
-                    data-testid={`button-timeline-${client.id}`}
-                    className="text-xs flex-1 md:flex-none"
-                  >
-                    <History className="h-3 w-3 mr-1" />
-                    Timeline
-                  </Button>
-                </div>
-              </div>
-              {client.email && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Mail className="h-4 w-4" />
-                  <span>{client.email}</span>
-                </div>
-              )}
-              {client.city && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <MapPin className="h-4 w-4" />
-                  <span>
-                    {client.city}
-                    {client.state && `, ${client.state}`}
-                  </span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span>
+                      {client.city || "-"}
+                      {client.state ? `, ${client.state}` : ""}
+                    </span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => openWhatsApp(client.phone)}
+                      data-testid={`button-whatsapp-${client.id}`}
+                    >
+                      WhatsApp
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onViewTimeline?.(client.id)}
+                      data-testid={`button-timeline-${client.id}`}
+                    >
+                      <History className="h-4 w-4 mr-2" />
+                      Timeline
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => onEdit?.(client)}
+                      data-testid={`button-edit-${client.id}`}
+                      aria-label="Editar cliente"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => onDelete?.(client.id)}
+                      data-testid={`button-delete-${client.id}`}
+                      aria-label="Excluir cliente"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
 
-      {filteredClients.length === 0 && (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-muted-foreground">Nenhum cliente encontrado</p>
-          </CardContent>
-        </Card>
-      )}
+            {filteredClients.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                  Nenhum cliente encontrado
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }

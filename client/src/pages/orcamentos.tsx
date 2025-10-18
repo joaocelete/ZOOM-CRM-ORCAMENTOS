@@ -362,11 +362,20 @@ export default function Orcamentos() {
             products={products}
             existingBudget={editingBudget || undefined}
             budgetId={editingBudget?.id}
-            onSave={(items, total, client) => {
+            onSave={(items, total, client, config) => {
               const budgetData = {
                 clientId: client.id,
                 total: total.toString(),
                 status: "draft",
+                deliveryTime: config.deliveryTime,
+                observations: config.observations,
+                paymentTerms: config.paymentTerms,
+                warranty: config.warranty,
+                installationIncluded: config.installationIncluded,
+                material: config.material,
+                finishing: config.finishing,
+                installationDeadline: config.installationDeadline,
+                validityDays: config.validityDays,
                 items: items.map((item) => ({
                   productName: item.productName,
                   type: item.type,
@@ -379,10 +388,19 @@ export default function Orcamentos() {
               };
               saveBudgetMutation.mutate(budgetData);
             }}
-            onUpdate={(budgetId, items, total, client) => {
+            onUpdate={(budgetId, items, total, client, config) => {
               const budgetData = {
                 clientId: client.id,
                 total: total.toString(),
+                deliveryTime: config.deliveryTime,
+                observations: config.observations,
+                paymentTerms: config.paymentTerms,
+                warranty: config.warranty,
+                installationIncluded: config.installationIncluded,
+                material: config.material,
+                finishing: config.finishing,
+                installationDeadline: config.installationDeadline,
+                validityDays: config.validityDays,
                 items: items.map((item) => ({
                   productName: item.productName,
                   type: item.type,

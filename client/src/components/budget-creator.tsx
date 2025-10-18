@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, FileText, Send, Search, Pencil } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Plus, Trash2, FileText, Send, Search, Pencil, ChevronDown, Settings } from "lucide-react";
 import type { Client, Product, Budget, BudgetItem as BudgetItemType } from "@shared/schema";
 import {
   Dialog,
@@ -26,13 +28,25 @@ interface BudgetItem {
   subtotal: number;
 }
 
+interface BudgetConfig {
+  deliveryTime: string;
+  observations: string;
+  paymentTerms: string;
+  warranty: string;
+  installationIncluded: string;
+  material: string;
+  finishing: string;
+  installationDeadline: string;
+  validityDays: number;
+}
+
 interface BudgetCreatorProps {
   clients?: Client[];
   products?: Product[];
   existingBudget?: Budget & { items?: BudgetItemType[]; client?: Client };
   budgetId?: string;
-  onSave?: (items: BudgetItem[], total: number, client: Client) => void;
-  onUpdate?: (budgetId: string, items: BudgetItem[], total: number, client: Client) => void;
+  onSave?: (items: BudgetItem[], total: number, client: Client, config: BudgetConfig) => void;
+  onUpdate?: (budgetId: string, items: BudgetItem[], total: number, client: Client, config: BudgetConfig) => void;
   onSendWhatsApp?: (items: BudgetItem[], total: number, client: Client) => void;
 }
 
@@ -47,6 +61,17 @@ export function BudgetCreator({ clients = [], products = [], existingBudget, bud
     city: "",
     state: "",
   });
+
+  // Budget configuration fields
+  const [deliveryTime, setDeliveryTime] = useState("5-7");
+  const [observations, setObservations] = useState("");
+  const [paymentTerms, setPaymentTerms] = useState("50% entrada + 50% entrega");
+  const [warranty, setWarranty] = useState("6 meses");
+  const [installationIncluded, setInstallationIncluded] = useState("no");
+  const [material, setMaterial] = useState("");
+  const [finishing, setFinishing] = useState("");
+  const [installationDeadline, setInstallationDeadline] = useState("");
+  const [validityDays, setValidityDays] = useState(7);
 
   const [items, setItems] = useState<BudgetItem[]>([
     {
@@ -74,6 +99,17 @@ export function BudgetCreator({ clients = [], products = [], existingBudget, bud
           setClientData(client);
         }
       }
+      
+      // Load budget configuration
+      if (existingBudget.deliveryTime) setDeliveryTime(existingBudget.deliveryTime);
+      if (existingBudget.observations) setObservations(existingBudget.observations);
+      if (existingBudget.paymentTerms) setPaymentTerms(existingBudget.paymentTerms);
+      if (existingBudget.warranty) setWarranty(existingBudget.warranty);
+      if (existingBudget.installationIncluded) setInstallationIncluded(existingBudget.installationIncluded);
+      if (existingBudget.material) setMaterial(existingBudget.material);
+      if (existingBudget.finishing) setFinishing(existingBudget.finishing);
+      if (existingBudget.installationDeadline) setInstallationDeadline(existingBudget.installationDeadline);
+      if (existingBudget.validityDays) setValidityDays(existingBudget.validityDays);
       
       // Load items
       if (existingBudget.items && existingBudget.items.length > 0) {
@@ -461,6 +497,139 @@ export function BudgetCreator({ clients = [], products = [], existingBudget, bud
         </Button>
       </div>
 
+      {/* Configurações Adicionais */}
+      <Collapsible>
+        <Card>
+          <CollapsibleTrigger className="w-full">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  <CardTitle className="font-serif text-base">Configurações Adicionais</CardTitle>
+                </div>
+                <ChevronDown className="h-5 w-5 transition-transform" />
+              </div>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Prazo de Entrega (dias úteis)</Label>
+                  <Input
+                    value={deliveryTime}
+                    onChange={(e) => setDeliveryTime(e.target.value)}
+                    placeholder="5-7"
+                    data-testid="input-delivery-time"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Validade do Orçamento (dias)</Label>
+                  <Input
+                    type="number"
+                    value={validityDays}
+                    onChange={(e) => setValidityDays(parseInt(e.target.value) || 7)}
+                    data-testid="input-validity-days"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Material</Label>
+                  <Select value={material} onValueChange={setMaterial}>
+                    <SelectTrigger data-testid="select-material">
+                      <SelectValue placeholder="Selecione o material..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="lona">Lona</SelectItem>
+                      <SelectItem value="vinil">Vinil</SelectItem>
+                      <SelectItem value="acm">ACM (Alumínio Composto)</SelectItem>
+                      <SelectItem value="acrilico">Acrílico</SelectItem>
+                      <SelectItem value="mdf">MDF</SelectItem>
+                      <SelectItem value="pvc">PVC</SelectItem>
+                      <SelectItem value="outros">Outros</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Acabamento</Label>
+                  <Select value={finishing} onValueChange={setFinishing}>
+                    <SelectTrigger data-testid="select-finishing">
+                      <SelectValue placeholder="Selecione o acabamento..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ilhoses">Ilhoses</SelectItem>
+                      <SelectItem value="laminacao">Laminação</SelectItem>
+                      <SelectItem value="bastao">Bastão</SelectItem>
+                      <SelectItem value="moldura">Moldura</SelectItem>
+                      <SelectItem value="recorte">Recorte Especial</SelectItem>
+                      <SelectItem value="nenhum">Nenhum</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Instalação Incluída?</Label>
+                  <Select value={installationIncluded} onValueChange={setInstallationIncluded}>
+                    <SelectTrigger data-testid="select-installation">
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="yes">Sim</SelectItem>
+                      <SelectItem value="no">Não</SelectItem>
+                      <SelectItem value="optional">Opcional (cotação separada)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Prazo de Instalação</Label>
+                  <Input
+                    value={installationDeadline}
+                    onChange={(e) => setInstallationDeadline(e.target.value)}
+                    placeholder="Ex: 2-3 dias após entrega"
+                    data-testid="input-installation-deadline"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Condições de Pagamento</Label>
+                <Input
+                  value={paymentTerms}
+                  onChange={(e) => setPaymentTerms(e.target.value)}
+                  placeholder="Ex: 50% entrada + 50% entrega"
+                  data-testid="input-payment-terms"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Garantia</Label>
+                <Input
+                  value={warranty}
+                  onChange={(e) => setWarranty(e.target.value)}
+                  placeholder="Ex: 6 meses contra defeitos de fabricação"
+                  data-testid="input-warranty"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Observações</Label>
+                <Textarea
+                  value={observations}
+                  onChange={(e) => setObservations(e.target.value)}
+                  placeholder="Informações adicionais importantes para este orçamento..."
+                  rows={4}
+                  data-testid="input-observations"
+                />
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
@@ -475,10 +644,21 @@ export function BudgetCreator({ clients = [], products = [], existingBudget, bud
             variant="outline" 
             onClick={() => {
               if (!currentClient) return;
+              const config: BudgetConfig = {
+                deliveryTime,
+                observations,
+                paymentTerms,
+                warranty,
+                installationIncluded,
+                material,
+                finishing,
+                installationDeadline,
+                validityDays,
+              };
               if (budgetId && onUpdate) {
-                onUpdate(budgetId, items, total, currentClient);
+                onUpdate(budgetId, items, total, currentClient, config);
               } else if (onSave) {
-                onSave(items, total, currentClient);
+                onSave(items, total, currentClient, config);
               }
             }}
             data-testid="button-save-budget"
