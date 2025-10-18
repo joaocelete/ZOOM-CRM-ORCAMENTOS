@@ -14,6 +14,44 @@ The system enables sales teams to:
 
 ## Recent Implementation (Latest Session - Oct 18, 2025)
 
+### ✅ Completed: Company Settings & PDF Customization
+
+**Company Settings Page** (/settings)
+- Complete form for company configuration
+- Fields: Company Name, CNPJ, Phone, Email, Website, Street, City, State
+- Logo upload with base64 storage
+- Auto-save functionality with toast confirmations
+- Accessible from desktop navbar (Settings link)
+- Discrete settings button added to Dashboard top-right corner
+
+**Database Schema**
+- `company_settings` table (singleton pattern - one record only)
+- All company data stored centrally for easy management
+- Logo stored as base64 string for simplicity
+
+**PDF Generation Integration**
+- `generateBudgetPDF()` now accepts optional CompanySettings parameter
+- Header: Displays company logo (if available) or company name
+- Footer: Shows company contact info, CNPJ, and location
+- Graceful fallbacks to default "Zoom Comunicação Visual" branding
+- Error handling for logo loading issues
+
+**API Improvements**
+- GET /api/settings - Fetch company configuration
+- PUT /api/settings - Save/update company settings
+- GET /api/budgets - Now includes client data in response (combines budgets + clients)
+- Improved efficiency: Budget list no longer shows "Cliente não encontrado"
+
+**Files Modified:**
+- `shared/schema.ts` - Added companySettings table
+- `server/storage.ts` - Added settings CRUD methods
+- `server/routes.ts` - Added settings endpoints, improved budgets API
+- `client/src/pages/settings.tsx` - New settings page
+- `client/src/lib/pdf-generator.ts` - Dynamic company data integration
+- `client/src/pages/orcamentos.tsx` - Fetches and uses company settings for PDF
+- `client/src/pages/dashboard.tsx` - Added discrete settings button
+- `client/src/components/navbar.tsx` - Added Settings navigation link
+
 ### ✅ Completed: Responsive Mobile Design
 
 **Bottom Navigation for Mobile**
