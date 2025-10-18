@@ -169,14 +169,14 @@ export function generateBudgetPDF(
     doc.text(location, 38, yPos);
   }
 
-  yPos += 12;
+  yPos += 15;
 
   // ============ ITENS DO ORÇAMENTO ============
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...darkGray);
   doc.text("ITENS DO ORÇAMENTO", 15, yPos);
-  yPos += 8;
+  yPos += 10;
 
   // Cabeçalho da tabela
   doc.setFillColor(...darkGray);
@@ -217,7 +217,18 @@ export function generateBudgetPDF(
       doc.setTextColor(...darkGray);
     }
 
-    const rowHeight = 12;
+    // Calcular altura da linha com base no conteúdo
+    let rowHeight = 12;
+    
+    // Nome do produto com quebra de linha (limite: 65mm)
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    const productNameLines = doc.splitTextToSize(item.productName, 65);
+    
+    // Ajustar altura se nome tiver múltiplas linhas
+    if (productNameLines.length > 1) {
+      rowHeight = Math.max(12, productNameLines.length * 5 + 4);
+    }
     
     // Fundo alternado
     if (index % 2 === 0) {
@@ -234,10 +245,8 @@ export function generateBudgetPDF(
     doc.setFont("helvetica", "bold");
     doc.text(`${index + 1}`, 18, yPos + 5);
 
-    // Nome do produto
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.text(item.productName, 28, yPos + 5);
+    // Nome do produto com quebra de linha
+    doc.text(productNameLines, 28, yPos + 5);
 
     // Tipo
     doc.setFont("helvetica", "normal");
@@ -245,7 +254,7 @@ export function generateBudgetPDF(
     const typeLabel = item.type === "m2" ? "Por m²" : item.type === "fixed" ? "Fixo" : "Serviço";
     doc.text(typeLabel, 95, yPos + 5);
 
-    // Especificações
+    // Especificações com quebra de linha (limite: 55mm)
     doc.setFont("helvetica", "normal");
     let specs = "";
     
@@ -253,23 +262,25 @@ export function generateBudgetPDF(
       const area = (parseFloat(item.width) * parseFloat(item.height)).toFixed(2);
       specs = `${item.width}m × ${item.height}m = ${area}m²`;
       
+      const specLines = doc.splitTextToSize(specs, 55);
+      doc.text(specLines, 115, yPos + 5);
+      
       if (item.pricePerM2) {
         const pricePerM2 = parseFloat(item.pricePerM2);
-        doc.text(specs, 115, yPos + 5);
         doc.setFontSize(7);
         doc.setTextColor(...mediumGray);
         doc.text(`R$ ${pricePerM2.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}/m²`, 115, yPos + 9);
         doc.setTextColor(...darkGray);
         doc.setFontSize(8);
-      } else {
-        doc.text(specs, 115, yPos + 5);
       }
     } else if (item.type === "fixed") {
       specs = "Valor único";
-      doc.text(specs, 115, yPos + 5);
+      const specLines = doc.splitTextToSize(specs, 55);
+      doc.text(specLines, 115, yPos + 5);
     } else {
       specs = "Serviço";
-      doc.text(specs, 115, yPos + 5);
+      const specLines = doc.splitTextToSize(specs, 55);
+      doc.text(specLines, 115, yPos + 5);
     }
 
     // Valor
@@ -285,39 +296,42 @@ export function generateBudgetPDF(
     yPos += rowHeight;
   });
 
-  yPos += 5;
+  yPos += 8;
 
   // ============ TOTAL ============
+  // Caixa 1: Subtotal
   doc.setFillColor(...lightGray);
-  doc.rect(15, yPos, pageWidth - 30, 18, "FD");
+  doc.rect(15, yPos, pageWidth - 30, 12, "FD");
   
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...darkGray);
-  doc.text("Subtotal:", 20, yPos + 7);
+  doc.text("Subtotal:", 20, yPos + 8);
   doc.text(
     `R$ ${parseFloat(budget.total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`,
     pageWidth - 20,
-    yPos + 7,
+    yPos + 8,
     { align: "right" }
   );
 
-  yPos += 8;
+  yPos += 15; // Espaço entre as duas caixas
+
+  // Caixa 2: Valor Total
   doc.setFillColor(...primaryColor);
-  doc.rect(15, yPos, pageWidth - 30, 10, "F");
+  doc.rect(15, yPos, pageWidth - 30, 12, "F");
   
   doc.setFontSize(13);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(0, 0, 0);
-  doc.text("VALOR TOTAL", 20, yPos + 7);
+  doc.text("VALOR TOTAL", 20, yPos + 8);
   doc.text(
     `R$ ${parseFloat(budget.total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`,
     pageWidth - 20,
-    yPos + 7,
+    yPos + 8,
     { align: "right" }
   );
 
-  yPos += 18;
+  yPos += 20;
 
   // ============ ESPECIFICAÇÕES TÉCNICAS ============
   if (budget.material || budget.finishing) {
@@ -328,12 +342,12 @@ export function generateBudgetPDF(
     }
 
     doc.setFillColor(...lightGray);
-    doc.rect(15, yPos, pageWidth - 30, 8, "FD");
+    doc.rect(15, yPos, pageWidth - 30, 10, "FD");
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...darkGray);
-    doc.text("ESPECIFICAÇÕES TÉCNICAS", 20, yPos + 5.5);
-    yPos += 10;
+    doc.text("ESPECIFICAÇÕES TÉCNICAS", 20, yPos + 6.5);
+    yPos += 13;
 
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
@@ -365,12 +379,12 @@ export function generateBudgetPDF(
   }
 
   doc.setFillColor(...lightGray);
-  doc.rect(15, yPos, pageWidth - 30, 8, "FD");
+  doc.rect(15, yPos, pageWidth - 30, 10, "FD");
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...darkGray);
-  doc.text("CONDIÇÕES COMERCIAIS", 20, yPos + 5.5);
-  yPos += 10;
+  doc.text("CONDIÇÕES COMERCIAIS", 20, yPos + 6.5);
+  yPos += 13;
 
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
