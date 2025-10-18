@@ -2,7 +2,7 @@ import { useState } from "react";
 import { BudgetCreator } from "@/components/budget-creator";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Client, Product, Budget, BudgetItem } from "@shared/schema";
+import type { Client, Product, Budget, BudgetItem, CompanySettings } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,10 @@ export default function Orcamentos() {
 
   const { data: budgets = [], isLoading: loadingBudgets } = useQuery<BudgetWithClient[]>({
     queryKey: ["/api/budgets"],
+  });
+
+  const { data: companySettings } = useQuery<CompanySettings>({
+    queryKey: ["/api/settings"],
   });
 
   const saveBudgetMutation = useMutation({
@@ -78,7 +82,7 @@ export default function Orcamentos() {
 
   const handleGeneratePDF = (budget: BudgetWithClient, client: Client) => {
     try {
-      const pdf = generateBudgetPDF(budget, client);
+      const pdf = generateBudgetPDF(budget, client, companySettings);
       pdf.save(`Orcamento_${client.name.replace(/\s+/g, "_")}_${new Date().toLocaleDateString("pt-BR").replace(/\//g, "-")}.pdf`);
       toast({
         title: "PDF gerado!",

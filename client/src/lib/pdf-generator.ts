@@ -1,9 +1,10 @@
 import jsPDF from "jspdf";
-import type { Budget, BudgetItem, Client } from "@shared/schema";
+import type { Budget, BudgetItem, Client, CompanySettings } from "@shared/schema";
 
 export function generateBudgetPDF(
   budget: Budget & { items?: BudgetItem[] },
-  client: Client
+  client: Client,
+  companySettings?: CompanySettings
 ) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.width;
@@ -14,17 +15,33 @@ export function generateBudgetPDF(
   const darkGray = [50, 50, 50] as [number, number, number];
   const lightGray = [240, 240, 240] as [number, number, number];
 
+  // Configurações da empresa (usa defaults se não fornecidas)
+  const companyName = companySettings?.companyName || "Zoom Comunicação Visual";
+  const companyLogo = companySettings?.logo;
+
   // CABEÇALHO - Logo e título
   doc.setFillColor(...primaryColor);
   doc.rect(0, 0, pageWidth, 30, "F");
   
-  doc.setTextColor(0, 0, 0);
-  doc.setFontSize(24);
-  doc.setFont("helvetica", "bold");
-  doc.text("ZOOM", 15, 15);
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.text("Comunicação Visual", 15, 22);
+  // Se houver logo, adicionar no PDF
+  if (companyLogo) {
+    try {
+      doc.addImage(companyLogo, "PNG", 15, 8, 20, 14);
+    } catch (error) {
+      console.error("Error adding logo to PDF:", error);
+      // Fallback para texto se houver erro na logo
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(18);
+      doc.setFont("helvetica", "bold");
+      doc.text(companyName, 15, 18);
+    }
+  } else {
+    // Sem logo: mostrar nome da empresa
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text(companyName, 15, 18);
+  }
 
   // Número do orçamento e data
   doc.setFontSize(12);
@@ -235,23 +252,51 @@ export function generateBudgetPDF(
   yPos += 10;
 
   // RODAPÉ
-  const footerY = doc.internal.pageSize.height - 20;
+  const footerY = doc.internal.pageSize.height - 25;
   doc.setDrawColor(...darkGray);
   doc.line(15, footerY, pageWidth - 15, footerY);
   
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...darkGray);
-  doc.text("Zoom Comunicação Visual", 15, footerY + 5);
-  if (client.phone) {
-    doc.text(`Contato: ${client.phone}`, pageWidth - 15, footerY + 5, { align: "right" });
+  
+  // Linha 1: Nome da empresa e telefone
+  doc.text(companyName, 15, footerY + 5);
+  const companyPhone = companySettings?.phone || client.phone;
+  if (companyPhone) {
+    doc.text(`Tel: ${companyPhone}`, pageWidth - 15, footerY + 5, { align: "right" });
   }
-  doc.text(
-    `www.zoomcomunicacao.com.br`,
-    pageWidth / 2,
-    footerY + 5,
-    { align: "center" }
-  );
+  
+  // Linha 2: Email e Website
+  let line2Left = "";
+  let line2Center = "";
+  
+  if (companySettings?.email) {
+    line2Left = companySettings.email;
+  }
+  
+  if (companySettings?.website) {
+    line2Center = companySettings.website;
+  } else {
+    line2Center = "www.zoomcomunicacao.com.br";
+  }
+  
+  if (line2Left) {
+    doc.text(line2Left, 15, footerY + 10);
+  }
+  if (line2Center) {
+    doc.text(line2Center, pageWidth / 2, footerY + 10, { align: "center" });
+  }
+  
+  // Linha 3: CNPJ e Endereço
+  if (companySettings?.cnpj) {
+    doc.text(`CNPJ: ${companySettings.cnpj}`, 15, footerY + 15);
+  }
+  
+  if (companySettings?.city && companySettings?.state) {
+    const location = `${companySettings.city} - ${companySettings.state}`;
+    doc.text(location, pageWidth - 15, footerY + 15, { align: "right" });
+  }
 
   return doc;
 }
