@@ -32,75 +32,61 @@ export function generateBudgetPDF(
   // ============ CABEÇALHO ============
   // Faixa amarela superior
   doc.setFillColor(...primaryColor);
-  doc.rect(0, 0, pageWidth, 50, "F");
+  doc.rect(0, 0, pageWidth, 45, "F");
 
-  // Logo à esquerda - PROPORÇÃO CORRETA (quadrado 35x35)
+  // LADO ESQUERDO: Logo + Informações da empresa
   if (companyLogo) {
     try {
-      doc.addImage(companyLogo, "PNG", 12, 10, 35, 35);
+      // Logo mantendo proporção (40x30 - mais largo que alto)
+      doc.addImage(companyLogo, "PNG", 10, 8, 40, 30);
+      
+      // Informações ao lado do logo
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text(companyName, 55, 15);
+      
+      doc.setFontSize(7);
+      doc.setFont("helvetica", "normal");
+      if (companyPhone) doc.text(`Tel: ${companyPhone}`, 55, 22);
+      if (companyEmail) doc.text(companyEmail, 55, 27);
+      if (companyWebsite) doc.text(companyWebsite, 55, 32);
     } catch (error) {
       console.error("Error adding logo to PDF:", error);
       doc.setTextColor(0, 0, 0);
-      doc.setFontSize(20);
+      doc.setFontSize(18);
       doc.setFont("helvetica", "bold");
-      doc.text(companyName, 15, 25);
+      doc.text(companyName, 15, 22);
     }
   } else {
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(20);
+    doc.setFontSize(18);
     doc.setFont("helvetica", "bold");
-    doc.text(companyName, 15, 25);
+    doc.text(companyName, 15, 18);
+    
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    if (companyPhone) doc.text(`Tel: ${companyPhone}`, 15, 26);
+    if (companyEmail) doc.text(companyEmail, 15, 31);
+    if (companyWebsite) doc.text(companyWebsite, 15, 36);
   }
 
-  // Informações da empresa abaixo do logo (LONGE DO BOX)
+  // LADO DIREITO: Informações do orçamento (SEM BOX)
   doc.setTextColor(0, 0, 0);
-  doc.setFontSize(10);
+  doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
-  doc.text(companyName, 52, 16);
+  doc.text("ORÇAMENTO", pageWidth - 15, 14, { align: "right" });
   
-  doc.setFontSize(7);
-  doc.setFont("helvetica", "normal");
-  let infoY = 22;
-  if (companyPhone) {
-    doc.text(`Tel: ${companyPhone}`, 52, infoY);
-    infoY += 3.5;
-  }
-  if (companyEmail) {
-    doc.text(companyEmail, 52, infoY);
-    infoY += 3.5;
-  }
-  if (companyWebsite) {
-    doc.text(companyWebsite, 52, infoY);
-  }
-
-  // Box de orçamento à direita - MAIS COMPACTO
-  const boxX = pageWidth - 54;
-  const boxY = 10;
-  const boxWidth = 48;
-  const boxHeight = 30;
-  
-  // Box branco com borda amarela
-  doc.setDrawColor(255, 210, 0);
-  doc.setLineWidth(1.5);
-  doc.setFillColor(255, 255, 255);
-  doc.rect(boxX, boxY, boxWidth, boxHeight, "FD");
-  
-  // Conteúdo do box
-  doc.setTextColor(...darkGray);
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text("ORÇAMENTO", pageWidth - 30, 18, { align: "center" });
-  
-  doc.setFontSize(7.5);
+  doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...mediumGray);
   const budgetNumber = budget.id.substring(0, 8).toUpperCase();
-  doc.text(`Nº ${budgetNumber}`, pageWidth - 30, 24, { align: "center" });
-  doc.text(new Date(budget.createdAt!).toLocaleDateString("pt-BR"), pageWidth - 30, 29, { align: "center" });
+  doc.text(`Nº ${budgetNumber}`, pageWidth - 15, 21, { align: "right" });
+  doc.text(new Date(budget.createdAt!).toLocaleDateString("pt-BR"), pageWidth - 15, 27, { align: "right" });
   const validityDays = budget.validityDays || 7;
-  doc.text(`Validade: ${validityDays} dias`, pageWidth - 30, 34, { align: "center" });
+  doc.text(`Validade: ${validityDays} dias`, pageWidth - 15, 33, { align: "right" });
 
-  yPos = 58;
+  yPos = 52;
 
   // ============ DADOS DO CLIENTE ============
   doc.setFillColor(...lightGray);
