@@ -23,11 +23,13 @@ export default function BottomNavigation() {
           const isActive = location === item.path;
           const Icon = item.icon;
           
+          const testId = item.path === "/" ? "dashboard" : item.path.slice(1);
+          
           return (
             <Link
               key={item.path}
               href={item.path}
-              data-testid={`bottom-nav-${item.label.toLowerCase()}`}
+              data-testid={`bottom-nav-${testId}`}
             >
               <div 
                 className={`flex flex-col items-center justify-center h-full gap-1 transition-colors ${

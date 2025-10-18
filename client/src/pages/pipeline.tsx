@@ -136,16 +136,14 @@ export default function Pipeline() {
         </Button>
       </div>
 
-      <div className="rounded-lg border bg-card p-2 md:p-4 overflow-x-auto">
-        <KanbanBoard
-          deals={filteredDeals}
-          onDealClick={(deal) => setLocation(`/deal/${deal.id}`)}
-          onDeleteDeal={(id) => deleteMutation.mutate(id)}
-          onMoveCard={(dealId: string, newStage: string) => {
-            updateStageMutation.mutate({ id: dealId, stage: newStage });
-          }}
-        />
-      </div>
+      <KanbanBoard
+        deals={filteredDeals}
+        onDealClick={(deal) => setLocation(`/deal/${deal.id}`)}
+        onDeleteDeal={(id) => deleteMutation.mutate(id)}
+        onMoveCard={(dealId: string, newStage: string) => {
+          updateStageMutation.mutate({ id: dealId, stage: newStage });
+        }}
+      />
 
       <DealDialog
         open={dialogOpen}
