@@ -8,8 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, FileText, Check, X } from "lucide-react";
+import { Search, Plus, FileText, Check, X, FileDown } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { generateBudgetPDF } from "@/lib/pdf-generator";
 
 type BudgetWithClient = Budget & {
   client?: Client;
@@ -74,6 +75,23 @@ export default function Orcamentos() {
       });
     },
   });
+
+  const handleGeneratePDF = (budget: BudgetWithClient, client: Client) => {
+    try {
+      const pdf = generateBudgetPDF(budget, client);
+      pdf.save(`Orcamento_${client.name.replace(/\s+/g, "_")}_${new Date().toLocaleDateString("pt-BR").replace(/\//g, "-")}.pdf`);
+      toast({
+        title: "PDF gerado!",
+        description: "O orçamento foi baixado com sucesso.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao gerar PDF",
+        description: "Não foi possível gerar o PDF do orçamento.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const getStatusLabel = (status: string) => {
     const labels: Record<string, { text: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -180,17 +198,32 @@ export default function Orcamentos() {
                       </span>
                     </div>
 
-                    {budget.status === "draft" && (
+                    <div className="flex gap-2">
                       <Button
-                        className="w-full"
-                        onClick={() => approveBudgetMutation.mutate(budget.id)}
-                        disabled={approveBudgetMutation.isPending}
-                        data-testid={`button-approve-${budget.id}`}
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => client && handleGeneratePDF(budget, client)}
+                        disabled={!client}
+                        data-testid={`button-pdf-${budget.id}`}
                       >
-                        <Check className="h-4 w-4 mr-2" />
-                        Aprovar Orçamento
+                        <FileDown className="h-4 w-4 mr-2" />
+                        <span className="hidden md:inline">Gerar PDF</span>
+                        <span className="md:hidden">PDF</span>
                       </Button>
-                    )}
+
+                      {budget.status === "draft" && (
+                        <Button
+                          className="flex-1"
+                          onClick={() => approveBudgetMutation.mutate(budget.id)}
+                          disabled={approveBudgetMutation.isPending}
+                          data-testid={`button-approve-${budget.id}`}
+                        >
+                          <Check className="h-4 w-4 mr-2" />
+                          <span className="hidden md:inline">Aprovar Orçamento</span>
+                          <span className="md:hidden">Aprovar</span>
+                        </Button>
+                      )}
+                    </div>
 
                     {budget.status === "approved" && (
                       <div className="text-sm text-muted-foreground flex items-center gap-2">
