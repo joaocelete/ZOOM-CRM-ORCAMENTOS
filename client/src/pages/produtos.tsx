@@ -47,10 +47,10 @@ export default function Produtos() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h1 className="font-serif text-3xl font-bold">Produtos</h1>
-        <p className="text-muted-foreground">Catálogo de produtos e serviços</p>
+        <h1 className="font-serif text-2xl md:text-3xl font-bold">Produtos</h1>
+        <p className="text-sm md:text-base text-muted-foreground">Catálogo de produtos e serviços</p>
       </div>
 
       <ProductList

@@ -62,13 +62,13 @@ export default function Producao() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-3 md:space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
-          <h1 className="font-serif text-3xl font-bold">Produção</h1>
-          <p className="text-muted-foreground">Acompanhe o status de produção e instalação</p>
+          <h1 className="font-serif text-2xl md:text-3xl font-bold">Produção</h1>
+          <p className="text-sm md:text-base text-muted-foreground">Acompanhe o status de produção e instalação</p>
         </div>
-        <Button data-testid="button-add-production">
+        <Button className="w-full md:w-auto" data-testid="button-add-production">
           <Plus className="h-4 w-4 mr-2" />
           Novo Item
         </Button>

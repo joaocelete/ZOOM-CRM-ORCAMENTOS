@@ -105,21 +105,23 @@ export default function Orcamentos() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h1 className="font-serif text-3xl font-bold">Orçamentos</h1>
-        <p className="text-muted-foreground">Gerencie orçamentos e aprovações</p>
+        <h1 className="font-serif text-2xl md:text-3xl font-bold">Orçamentos</h1>
+        <p className="text-sm md:text-base text-muted-foreground">Gerencie orçamentos e aprovações</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="list" data-testid="tab-budget-list">
-            <FileText className="h-4 w-4 mr-2" />
-            Lista de Orçamentos
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="list" data-testid="tab-budget-list" className="text-xs md:text-sm">
+            <FileText className="h-4 w-4 md:mr-2" />
+            <span className="hidden md:inline">Lista de Orçamentos</span>
+            <span className="md:hidden ml-1">Lista</span>
           </TabsTrigger>
-          <TabsTrigger value="create" data-testid="tab-budget-create">
-            <Plus className="h-4 w-4 mr-2" />
-            Criar Novo
+          <TabsTrigger value="create" data-testid="tab-budget-create" className="text-xs md:text-sm">
+            <Plus className="h-4 w-4 md:mr-2" />
+            <span className="hidden md:inline">Criar Novo</span>
+            <span className="md:hidden ml-1">Novo</span>
           </TabsTrigger>
         </TabsList>
 
@@ -136,7 +138,7 @@ export default function Orcamentos() {
           </div>
 
           {loadingBudgets ? (
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-3 md:gap-4 md:grid-cols-2">
               {[1, 2, 3, 4].map((i) => (
                 <Card key={i}>
                   <CardHeader className="pb-3">
@@ -150,7 +152,7 @@ export default function Orcamentos() {
               ))}
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-3 md:gap-4 md:grid-cols-2">
               {filteredBudgets.map((budget) => {
                 const client = clients.find((c) => c.id === budget.clientId);
                 const statusInfo = getStatusLabel(budget.status);

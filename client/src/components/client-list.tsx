@@ -31,7 +31,7 @@ export function ClientList({ clients, onEdit, onDelete, onAdd, onViewTimeline }:
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-3">
+      <div className="flex flex-col md:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -42,13 +42,13 @@ export function ClientList({ clients, onEdit, onDelete, onAdd, onViewTimeline }:
             data-testid="input-search-clients"
           />
         </div>
-        <Button onClick={onAdd} data-testid="button-add-client">
+        <Button onClick={onAdd} className="w-full md:w-auto" data-testid="button-add-client">
           <Plus className="h-4 w-4 mr-2" />
           Novo Cliente
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-3 md:gap-4 md:grid-cols-2">
         {filteredClients.map((client) => (
           <Card key={client.id} className="hover-elevate" data-testid={`client-card-${client.id}`}>
             <CardHeader className="pb-3">
@@ -80,16 +80,18 @@ export function ClientList({ clients, onEdit, onDelete, onAdd, onViewTimeline }:
               </div>
             </CardHeader>
             <CardContent className="space-y-2">
-              <div className="flex items-center gap-2 text-sm">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                <span className="flex-1">{client.phone}</span>
+              <div className="flex flex-col md:flex-row md:items-center gap-2 text-sm">
+                <div className="flex items-center gap-2 flex-1">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <span>{client.phone}</span>
+                </div>
                 <div className="flex gap-2">
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => openWhatsApp(client.phone)}
                     data-testid={`button-whatsapp-${client.id}`}
-                    className="text-xs"
+                    className="text-xs flex-1 md:flex-none"
                   >
                     WhatsApp
                   </Button>
@@ -98,7 +100,7 @@ export function ClientList({ clients, onEdit, onDelete, onAdd, onViewTimeline }:
                     variant="outline"
                     onClick={() => onViewTimeline?.(client.id)}
                     data-testid={`button-timeline-${client.id}`}
-                    className="text-xs"
+                    className="text-xs flex-1 md:flex-none"
                   >
                     <History className="h-3 w-3 mr-1" />
                     Timeline

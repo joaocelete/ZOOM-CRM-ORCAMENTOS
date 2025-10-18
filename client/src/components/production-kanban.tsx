@@ -31,16 +31,16 @@ export function ProductionKanban({ items, onStatusChange }: ProductionKanbanProp
 
   return (
     <div className="overflow-x-auto pb-4">
-      <div className="flex gap-4 min-w-max">
+      <div className="flex gap-2 md:gap-4 min-w-max">
         {statuses.map(status => {
           const statusItems = getItemsByStatus(status.id);
           
           return (
-            <div key={status.id} className="w-80 shrink-0">
+            <div key={status.id} className="w-[240px] md:w-80 shrink-0">
               <Card className="h-full">
-                <CardHeader className="pb-3">
+                <CardHeader className="pb-2 md:pb-3">
                   <div className="flex items-center justify-between gap-2">
-                    <CardTitle className="text-sm font-semibold">{status.name}</CardTitle>
+                    <CardTitle className="text-xs md:text-sm font-semibold">{status.name}</CardTitle>
                     <Badge variant="secondary" className={status.color}>
                       {statusItems.length}
                     </Badge>

@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Navbar } from "@/components/navbar";
+import BottomNavigation from "@/components/bottom-navigation";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Clientes from "@/pages/clientes";
@@ -35,10 +36,13 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <div className="flex min-h-screen flex-col">
-          <Navbar />
-          <main className="flex-1 overflow-auto p-6">
+          <div className="hidden md:block">
+            <Navbar />
+          </div>
+          <main className="flex-1 overflow-auto p-4 md:p-6 pb-20 md:pb-6">
             <Router />
           </main>
+          <BottomNavigation />
         </div>
         <Toaster />
       </TooltipProvider>

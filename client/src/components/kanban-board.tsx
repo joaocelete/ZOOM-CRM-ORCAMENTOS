@@ -61,7 +61,7 @@ export function KanbanBoard({ deals, onDealClick, onDeleteDeal, onMoveCard }: Ka
 
   return (
     <div className="overflow-x-auto pb-4">
-      <div className="flex gap-3 min-w-max px-1 h-[calc(100vh-280px)]">
+      <div className="flex gap-2 md:gap-3 min-w-max px-1 h-[calc(100vh-350px)] md:h-[calc(100vh-280px)]">
         {stages.map(stage => {
           const stageDeals = getDealsByStage(stage.id);
           const total = getStageTotal(stage.id);
@@ -69,21 +69,21 @@ export function KanbanBoard({ deals, onDealClick, onDeleteDeal, onMoveCard }: Ka
           return (
             <div
               key={stage.id}
-              className="w-[280px] shrink-0 flex flex-col"
+              className="w-[240px] md:w-[280px] shrink-0 flex flex-col"
               onDragOver={(e) => e.preventDefault()}
               onDrop={() => handleDrop(stage.id)}
             >
-              <div className="mb-3 space-y-1">
+              <div className="mb-2 md:mb-3 space-y-1">
                 <div className="flex items-center gap-2">
-                  <div className={`h-1 w-8 rounded-full ${stage.color}`} />
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-foreground">
+                  <div className={`h-1 w-6 md:w-8 rounded-full ${stage.color}`} />
+                  <h3 className="text-[10px] md:text-xs font-semibold uppercase tracking-wide text-foreground line-clamp-1">
                     {stage.name}
                   </h3>
                   <Badge variant="secondary" className="ml-auto h-5 min-w-5 rounded-full px-1.5 text-xs">
                     {stageDeals.length}
                   </Badge>
                 </div>
-                <p className="text-sm font-bold text-foreground">
+                <p className="text-xs md:text-sm font-bold text-foreground">
                   R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                 </p>
               </div>

@@ -65,10 +65,10 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6" data-testid="page-dashboard">
+    <div className="space-y-4 md:space-y-6" data-testid="page-dashboard">
       <div>
-        <h1 className="font-serif text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">Visão geral do seu negócio</p>
+        <h1 className="font-serif text-2xl md:text-3xl font-bold">Dashboard</h1>
+        <p className="text-sm md:text-base text-muted-foreground">Visão geral do seu negócio</p>
       </div>
 
       <DashboardMetrics
@@ -80,17 +80,17 @@ export default function Dashboard() {
 
       <WonDealsMetrics deals={deals} />
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 md:gap-6 lg:grid-cols-2">
         <DealsStatusChart deals={deals} />
         <DealsValueByStageChart deals={deals} />
       </div>
 
       <SalesTrendChart deals={deals} />
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 md:gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-4">
-          <div className="rounded-lg border bg-card p-6">
-            <h3 className="font-semibold text-lg mb-4">Resumo do Pipeline</h3>
+          <div className="rounded-lg border bg-card p-4 md:p-6">
+            <h3 className="font-semibold text-base md:text-lg mb-3 md:mb-4">Resumo do Pipeline</h3>
             <div className="space-y-3">
               {[
                 { stage: "Contato", count: deals.filter(d => d.stage === "contact" && d.status === "active").length },
@@ -117,8 +117,8 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="space-y-4">
-          <div className="rounded-lg border bg-card p-6">
-            <h3 className="font-semibold text-lg mb-4">Meta Mensal</h3>
+          <div className="rounded-lg border bg-card p-4 md:p-6">
+            <h3 className="font-semibold text-base md:text-lg mb-3 md:mb-4">Meta Mensal</h3>
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Atingido</span>

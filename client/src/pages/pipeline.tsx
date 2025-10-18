@@ -103,22 +103,22 @@ export default function Pipeline() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="space-y-3 md:space-y-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
-          <h1 className="font-serif text-2xl font-bold">Pipeline de Vendas</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="font-serif text-2xl md:text-3xl font-bold">Pipeline de Vendas</h1>
+          <p className="text-xs md:text-sm text-muted-foreground mt-1">
             Gerencie seus negócios através do funil de vendas
           </p>
         </div>
-        <Button onClick={handleAdd} data-testid="button-add-deal">
+        <Button onClick={handleAdd} className="w-full md:w-auto" data-testid="button-add-deal">
           <Plus className="h-4 w-4 mr-2" />
           Adicionar negócio
         </Button>
       </div>
 
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Buscar negócios..."
@@ -136,7 +136,7 @@ export default function Pipeline() {
         </Button>
       </div>
 
-      <div className="rounded-lg border bg-card p-4">
+      <div className="rounded-lg border bg-card p-2 md:p-4 overflow-x-auto">
         <KanbanBoard
           deals={filteredDeals}
           onDealClick={(deal) => setLocation(`/deal/${deal.id}`)}

@@ -60,8 +60,8 @@ export function ProductList({ products, onEdit, onDelete, onAdd }: ProductListPr
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-3">
-        <div className="relative flex-1 min-w-[200px]">
+      <div className="flex flex-col md:flex-row gap-3">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Buscar produtos..."
@@ -73,7 +73,7 @@ export function ProductList({ products, onEdit, onDelete, onAdd }: ProductListPr
         </div>
         
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-[180px]" data-testid="select-category-filter">
+          <SelectTrigger className="w-full md:w-[180px]" data-testid="select-category-filter">
             <SelectValue placeholder="Categoria" />
           </SelectTrigger>
           <SelectContent>
@@ -87,7 +87,7 @@ export function ProductList({ products, onEdit, onDelete, onAdd }: ProductListPr
         </Select>
 
         <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-[180px]" data-testid="select-type-filter">
+          <SelectTrigger className="w-full md:w-[180px]" data-testid="select-type-filter">
             <SelectValue placeholder="Tipo" />
           </SelectTrigger>
           <SelectContent>
@@ -98,7 +98,7 @@ export function ProductList({ products, onEdit, onDelete, onAdd }: ProductListPr
           </SelectContent>
         </Select>
         
-        <Button onClick={onAdd} data-testid="button-add-product">
+        <Button onClick={onAdd} className="w-full md:w-auto" data-testid="button-add-product">
           <Plus className="h-4 w-4 mr-2" />
           Novo Produto
         </Button>

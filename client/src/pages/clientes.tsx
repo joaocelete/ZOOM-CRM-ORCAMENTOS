@@ -49,10 +49,10 @@ export default function Clientes() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h1 className="font-serif text-3xl font-bold">Clientes</h1>
-        <p className="text-muted-foreground">Gerencie seus clientes e contatos</p>
+        <h1 className="font-serif text-2xl md:text-3xl font-bold">Clientes</h1>
+        <p className="text-sm md:text-base text-muted-foreground">Gerencie seus clientes e contatos</p>
       </div>
 
       <ClientList
