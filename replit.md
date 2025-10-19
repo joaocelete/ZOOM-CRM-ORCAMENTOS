@@ -6,7 +6,7 @@ Zoom CRM is a custom customer relationship management system designed for the vi
 
 ## Recent Changes (Oct 19, 2025)
 
-### ✅ Customizable HTML PDF Template System
+### ✅ Customizable HTML PDF Template System with Real-Time Preview
 
 **Complete PDF Template Editor**
 - Added `pdfTemplate` field to company settings schema for storing custom HTML templates
@@ -15,7 +15,18 @@ Zoom CRM is a custom customer relationship management system designed for the vi
   - Syntax-highlighted textarea for HTML editing
   - Variable documentation showing all available placeholders
   - "Restore Default" button to reset template
+  - **"Atualizar Preview" button for real-time preview**
+  - **Collapsible preview area with iframe rendering**
 - Integrated **html2pdf.js** library for efficient HTML→PDF conversion
+
+**Real-Time Preview System**
+- **Mock data system** (`client/src/lib/pdf-preview-data.ts`) with realistic budget example
+- **Template compiler** that processes variables, conditionals, and loops
+- **Live preview** updates when clicking "Atualizar Preview"
+- **Merges form data** with mock data for accurate preview
+- **Iframe rendering** shows compiled HTML exactly as it will appear in PDF
+- **Collapsible interface** to show/hide preview
+- **Toast notifications** for user feedback
 
 **Template Features:**
 - Full HTML/CSS control over PDF layout (spacing, colors, boxes, positioning)
@@ -28,13 +39,16 @@ Zoom CRM is a custom customer relationship management system designed for the vi
 **Technical Implementation:**
 - `client/src/lib/default-pdf-template.ts` - Default HTML template with CSS
 - `client/src/lib/html-pdf-generator.ts` - Template compiler and PDF generator
-- `client/src/pages/settings.tsx` - Template editor interface
+- `client/src/lib/pdf-preview-data.ts` - Mock data for realistic preview
+- `client/src/pages/settings.tsx` - Template editor with preview interface
 - `client/src/pages/orcamentos.tsx` - Updated to use new HTML PDF generator
 - Database migration added `pdf_template` column to `company_settings` table
 
 **Benefits:**
+- **Instant visual feedback** while editing templates
 - No more manual spacing adjustments in code
 - Users have complete control over PDF appearance
+- See exactly how PDF will look before saving
 - Easier to maintain and customize than programmatic PDF generation
 - Better performance with html2pdf.js
 
