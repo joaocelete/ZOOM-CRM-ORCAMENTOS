@@ -7,8 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Settings as SettingsIcon, Upload, Save, Building2 } from "lucide-react";
+import { Settings as SettingsIcon, Upload, Save, Building2, FileCode } from "lucide-react";
 import { ImageCropDialog } from "@/components/image-crop-dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { DEFAULT_PDF_TEMPLATE } from "@/lib/default-pdf-template";
 
 export default function Settings() {
   const { toast } = useToast();
@@ -29,6 +31,7 @@ export default function Settings() {
     email: "",
     website: "",
     logo: "",
+    pdfTemplate: "",
   });
 
   const [logoPreview, setLogoPreview] = useState<string>("");
@@ -49,6 +52,7 @@ export default function Settings() {
         email: settings.email || "",
         website: settings.website || "",
         logo: settings.logo || "",
+        pdfTemplate: settings.pdfTemplate || DEFAULT_PDF_TEMPLATE,
       });
       if (settings.logo) {
         setLogoPreview(settings.logo);
@@ -326,6 +330,52 @@ export default function Settings() {
                 placeholder="www.empresa.com.br"
                 data-testid="input-website"
               />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* PDF Template Editor */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileCode className="h-5 w-5" />
+              Template de PDF Personalizado
+            </CardTitle>
+            <CardDescription>
+              Edite o template HTML do PDF para personalizar totalmente o layout dos seus orçamentos.
+              Use variáveis como {`{{companyName}}`}, {`{{budgetNumber}}`}, {`{{clientName}}`}, etc.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="pdfTemplate">Código HTML do Template</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleInputChange("pdfTemplate", DEFAULT_PDF_TEMPLATE)}
+                  data-testid="button-reset-template"
+                >
+                  Restaurar Padrão
+                </Button>
+              </div>
+              <Textarea
+                id="pdfTemplate"
+                value={formData.pdfTemplate}
+                onChange={(e) => handleInputChange("pdfTemplate", e.target.value)}
+                placeholder="Cole o código HTML do template aqui..."
+                className="font-mono text-xs min-h-[400px]"
+                data-testid="textarea-pdf-template"
+              />
+              <p className="text-xs text-muted-foreground">
+                <strong>Variáveis disponíveis:</strong> {`{{companyName}}`}, {`{{logo}}`}, {`{{cnpj}}`}, {`{{address}}`}, 
+                {`{{city}}`}, {`{{state}}`}, {`{{phone}}`}, {`{{email}}`}, {`{{website}}`}, {`{{budgetNumber}}`}, 
+                {`{{date}}`}, {`{{validityDays}}`}, {`{{clientName}}`}, {`{{clientCompany}}`}, {`{{clientPhone}}`}, 
+                {`{{clientEmail}}`}, {`{{clientLocation}}`}, {`{{total}}`}, {`{{material}}`}, {`{{finishing}}`}, 
+                {`{{paymentTerms}}`}, {`{{warranty}}`}, {`{{installationInfo}}`}, {`{{installationDeadline}}`}, 
+                {`{{deliveryTime}}`}, {`{{observations}}`}
+              </p>
             </div>
           </CardContent>
         </Card>
