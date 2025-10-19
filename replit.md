@@ -6,6 +6,45 @@ Zoom CRM is a custom customer relationship management system designed for the vi
 
 ## Recent Changes (Oct 19, 2025)
 
+### ✅ Sistema de Favoritos para Produtos
+
+**Funcionalidade de Favoritos:**
+- Campo `isFavorite` (boolean) adicionado à tabela products
+- Botão de estrela (⭐) na lista de produtos para favoritar/desfavoritar
+- Estrela amarela preenchida indica produto favoritado
+- Produtos favoritos sempre aparecem primeiro nas listagens
+
+**Integração com Criação de Orçamentos:**
+- Produtos favoritos aparecem no topo da busca ao criar orçamentos
+- Ícone de estrela amarela visível no dropdown de seleção
+- Ordenação mantida mesmo durante busca/filtro
+- Facilita seleção dos produtos mais vendidos
+
+**Backend:**
+- Endpoint PATCH `/api/products/:id/favorite` para toggle
+- Migração de banco de dados executada com sucesso
+- Default `false` para produtos existentes
+
+**Interface Visual:**
+- Coluna dedicada com botão de estrela na lista
+- Indicador visual claro: cinza (normal) → amarelo (favorito)
+- Estrelas visíveis tanto na lista quanto no seletor de orçamentos
+
+**Experiência do Usuário:**
+1. Clique na estrela ao lado do produto → favorita
+2. Clique novamente → remove dos favoritos
+3. Favoritos sempre aparecem primeiro
+4. Ao criar orçamento, favoritos ficam no topo da busca
+
+**Arquivos Modificados:**
+- `shared/schema.ts` - Campo isFavorite
+- `server/routes.ts` - Endpoint de toggle
+- `client/src/components/product-list.tsx` - Botão de estrela
+- `client/src/components/budget-creator.tsx` - Ordenação e ícones
+- `client/src/pages/produtos.tsx` - Mutation para toggle
+
+## Recent Changes (Oct 19, 2025)
+
 ### ✅ Campo de Busca de Produtos com Auto-preenchimento de Tipo
 
 **Seleção de Produtos Otimizada:**
