@@ -135,6 +135,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/products/:id/favorite", async (req, res) => {
+    try {
+      const existing = await storage.getProduct(req.params.id);
+      if (!existing) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+      
+      const product = await storage.updateProduct(req.params.id, {
+        isFavorite: !existing.isFavorite
+      });
+      res.json(product);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to toggle favorite" });
+    }
+  });
+
   // ==================== BUDGETS ====================
   app.get("/api/budgets", async (req, res) => {
     try {
