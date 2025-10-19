@@ -23,7 +23,11 @@ export default function Dashboard() {
   });
 
   const isLoading = dealsLoading || clientsLoading || budgetsLoading;
-  const hasError = dealsError || clientsError || budgetsError;
+  const hasError = (dealsError || clientsError || budgetsError) && 
+                   !isLoading && 
+                   deals.length === 0 && 
+                   clients.length === 0 && 
+                   budgets.length === 0;
 
   const activeDeals = deals.filter(d => d.status === "active").length;
   const wonDeals = deals.filter(d => d.status === "won");
