@@ -4,7 +4,41 @@
 
 Zoom CRM is a custom customer relationship management system designed for the visual communication industry. It manages clients, budgets, sales pipelines (deals), products, and production workflows. This full-stack web application offers an intuitive dashboard-style interface, enabling sales teams to track client relationships, create dynamic budgets, manage deals via a visual Kanban board, maintain a product catalog, monitor production, and generate/send budgets via WhatsApp and PDF. The project aims to provide a comprehensive tool for streamlining visual communication business operations.
 
-## Recent Changes (Oct 18, 2025)
+## Recent Changes (Oct 19, 2025)
+
+### ✅ Customizable HTML PDF Template System
+
+**Complete PDF Template Editor**
+- Added `pdfTemplate` field to company settings schema for storing custom HTML templates
+- Created default professional HTML/CSS template with full layout control
+- Built template editor in Settings page with:
+  - Syntax-highlighted textarea for HTML editing
+  - Variable documentation showing all available placeholders
+  - "Restore Default" button to reset template
+- Integrated **html2pdf.js** library for efficient HTML→PDF conversion
+
+**Template Features:**
+- Full HTML/CSS control over PDF layout (spacing, colors, boxes, positioning)
+- Handlebars-like variable system: `{{companyName}}`, `{{budgetNumber}}`, `{{clientName}}`, etc.
+- Support for conditionals: `{{#if variable}}...{{/if}}`
+- Support for loops: `{{#each items}}...{{/each}}`
+- Professional default template with company branding, responsive tables, modern styling
+- Users can customize everything: margins, padding, fonts, colors, section layout
+
+**Technical Implementation:**
+- `client/src/lib/default-pdf-template.ts` - Default HTML template with CSS
+- `client/src/lib/html-pdf-generator.ts` - Template compiler and PDF generator
+- `client/src/pages/settings.tsx` - Template editor interface
+- `client/src/pages/orcamentos.tsx` - Updated to use new HTML PDF generator
+- Database migration added `pdf_template` column to `company_settings` table
+
+**Benefits:**
+- No more manual spacing adjustments in code
+- Users have complete control over PDF appearance
+- Easier to maintain and customize than programmatic PDF generation
+- Better performance with html2pdf.js
+
+## Previous Changes (Oct 18, 2025)
 
 ### ✅ Image Crop Tool & Redesigned PDF Layout
 

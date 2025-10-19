@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Search, Plus, FileText, Check, X, FileDown, Pencil, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { generateBudgetPDF } from "@/lib/pdf-generator";
+import { generateHTMLPDF } from "@/lib/html-pdf-generator";
+import { DEFAULT_PDF_TEMPLATE } from "@/lib/default-pdf-template";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -137,13 +138,30 @@ export default function Orcamentos() {
 
   const handleGeneratePDF = async (budget: BudgetWithClient, client: Client) => {
     try {
+      if (!companySettings) {
+        toast({
+          title: "Erro",
+          description: "Configurações da empresa não encontradas.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Buscar os items do orçamento
       const items = await fetch(`/api/budgets/${budget.id}/items`).then(res => res.json());
       
-      // Gerar o PDF com os items
-      const budgetWithItems = { ...budget, items };
-      const pdf = generateBudgetPDF(budgetWithItems, client, companySettings);
-      pdf.save(`Orcamento_${client.name.replace(/\s+/g, "_")}_${new Date().toLocaleDateString("pt-BR").replace(/\//g, "-")}.pdf`);
+      // Usar template customizado ou padrão
+      const template = companySettings.pdfTemplate || DEFAULT_PDF_TEMPLATE;
+      
+      // Gerar o PDF com HTML customizado
+      await generateHTMLPDF({
+        budget,
+        client,
+        items,
+        settings: companySettings,
+        template,
+      });
+
       toast({
         title: "PDF gerado!",
         description: "O orçamento foi baixado com sucesso.",
