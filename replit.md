@@ -38,15 +38,22 @@ Zoom CRM is a custom customer relationship management system designed for the vi
 
 **Technical Implementation:**
 - `client/src/lib/default-pdf-template.ts` - Default HTML template with CSS
-- `client/src/lib/html-pdf-generator.ts` - Template compiler and PDF generator
+- `client/src/lib/html-pdf-generator.ts` - Template compiler and PDF generator with 15mm margins
 - `client/src/lib/pdf-preview-data.ts` - Mock data for realistic preview
 - `client/src/pages/settings.tsx` - Template editor with preview interface
 - `client/src/pages/orcamentos.tsx` - Updated to use new HTML PDF generator
 - Database migration added `pdf_template` column to `company_settings` table
 
+**PDF Layout Configuration:**
+- **15mm margins** on all sides (top, right, bottom, left)
+- **Content centered** with max-width of 180mm
+- **Logo properly displayed** in header using {{logo}} variable
+- Professional spacing and alignment throughout document
+
 **Benefits:**
 - **Instant visual feedback** while editing templates
-- No more manual spacing adjustments in code
+- **Proper margins and centering** for professional PDFs
+- **Logo integration** from company settings
 - Users have complete control over PDF appearance
 - See exactly how PDF will look before saving
 - Easier to maintain and customize than programmatic PDF generation

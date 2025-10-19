@@ -176,7 +176,7 @@ export async function generateHTMLPDF(params: GeneratePDFParams): Promise<void> 
   
   // Generate PDF
   const opt = {
-    margin: 0,
+    margin: [15, 15, 15, 15] as [number, number, number, number],
     filename: `Orcamento-${budgetNumber}.pdf`,
     image: { type: "jpeg" as const, quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true },

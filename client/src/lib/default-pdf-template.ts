@@ -14,7 +14,9 @@ export const DEFAULT_PDF_TEMPLATE = `<!DOCTYPE html>
       font-size: 10pt;
       line-height: 1.4;
       color: #333;
-      padding: 15mm;
+      max-width: 180mm;
+      margin: 0 auto;
+      padding: 0;
     }
     
     .header {
