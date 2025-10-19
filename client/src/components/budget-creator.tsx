@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Plus, Trash2, FileText, Send, Search, Pencil, ChevronDown, Settings, Check, ChevronsUpDown } from "lucide-react";
+import { Plus, Trash2, FileText, Send, Search, Pencil, ChevronDown, Settings, Check, ChevronsUpDown, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Client, Product, Budget, BudgetItem as BudgetItemType } from "@shared/schema";
 import {
@@ -456,7 +456,8 @@ export function BudgetCreator({ clients = [], products = [], existingBudget, bud
                               .map((product) => (
                               <CommandItem
                                 key={product.id}
-                                value={product.name}
+                                value={`${product.isFavorite ? '⭐ ' : ''}${product.name}`}
+                                keywords={[product.name, product.category || '', product.isFavorite ? 'favorito' : '']}
                                 onSelect={() => handleSelectProduct(item.id, product.id)}
                               >
                                 <Check
@@ -465,11 +466,16 @@ export function BudgetCreator({ clients = [], products = [], existingBudget, bud
                                     item.productName === product.name ? "opacity-100" : "opacity-0"
                                   )}
                                 />
-                                <div className="flex flex-col">
-                                  <span>{product.name}</span>
-                                  {product.category && (
-                                    <span className="text-xs text-muted-foreground">{product.category}</span>
+                                <div className="flex items-center gap-2 flex-1">
+                                  {product.isFavorite && (
+                                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 shrink-0" />
                                   )}
+                                  <div className="flex flex-col flex-1 min-w-0">
+                                    <span className="truncate">{product.name}</span>
+                                    {product.category && (
+                                      <span className="text-xs text-muted-foreground truncate">{product.category}</span>
+                                    )}
+                                  </div>
                                 </div>
                               </CommandItem>
                             ))}
