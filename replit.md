@@ -6,6 +6,38 @@ Zoom CRM is a custom customer relationship management system designed for the vi
 
 ## Recent Changes (Oct 19, 2025)
 
+### ✅ Campo de Busca de Produtos com Auto-preenchimento de Tipo
+
+**Seleção de Produtos Otimizada:**
+- Substituído Select dropdown por Combobox pesquisável (Popover + Command)
+- Campo de busca com filtro em tempo real por nome de produto
+- Exibe categoria do produto abaixo do nome na lista
+- Ícone de check marca o produto selecionado
+- Suporta centenas de produtos sem perda de performance
+
+**Auto-preenchimento de Tipo:**
+- Tipo (M², Fixo, Serviço) é preenchido automaticamente do produto
+- Campo de tipo se torna readonly/disabled após seleção
+- Texto auxiliar: "O tipo vem do produto selecionado"
+- Impede erros de seleção manual incorreta
+
+**Experiência do Usuário:**
+1. Clique em "Buscar produto..." abre popover
+2. Digite para filtrar produtos
+3. Selecione o produto da lista
+4. Tipo é preenchido automaticamente
+5. Popover fecha, campos prontos para preenchimento
+
+**Componentes Utilizados:**
+- `Popover` + `Command` do Shadcn UI
+- Ícones: `ChevronsUpDown`, `Check`
+- Estado de popover individual por item
+
+**Arquivos Modificados:**
+- `client/src/components/budget-creator.tsx` - Implementação completa
+
+## Recent Changes (Oct 19, 2025)
+
 ### ✅ Documentação Completa do Sistema
 
 **Arquivo Criado: DOCUMENTACAO.md**

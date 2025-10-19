@@ -6,7 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Plus, Trash2, FileText, Send, Search, Pencil, ChevronDown, Settings } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Plus, Trash2, FileText, Send, Search, Pencil, ChevronDown, Settings, Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { Client, Product, Budget, BudgetItem as BudgetItemType } from "@shared/schema";
 import {
   Dialog,
@@ -85,6 +88,9 @@ export function BudgetCreator({ clients = [], products = [], existingBudget, bud
     },
   ]);
 
+  // State for product search popovers
+  const [openPopovers, setOpenPopovers] = useState<Record<string, boolean>>({});
+
   // Load existing budget data when editing
   useEffect(() => {
     if (existingBudget) {
@@ -146,6 +152,16 @@ export function BudgetCreator({ clients = [], products = [], existingBudget, bud
         pricePerM2: product.pricePerM2 ? parseFloat(product.pricePerM2) : 0,
         fixedPrice: product.fixedPrice ? parseFloat(product.fixedPrice) : 0,
       });
+      // Close the popover using functional update
+      setOpenPopovers(prev => ({ ...prev, [itemId]: false }));
+    }
+  };
+
+  const getTypeLabel = (type: "m2" | "fixed" | "service") => {
+    switch (type) {
+      case "m2": return "M²";
+      case "fixed": return "Valor Fixo";
+      case "service": return "Serviço";
     }
   };
 
@@ -408,34 +424,66 @@ export function BudgetCreator({ clients = [], products = [], existingBudget, bud
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Produto</Label>
-                  <Select onValueChange={(value) => handleSelectProduct(item.id, value)}>
-                    <SelectTrigger data-testid={`select-product-${item.id}`}>
-                      <SelectValue placeholder="Selecionar produto..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {products.map(product => (
-                        <SelectItem key={product.id} value={product.id}>
-                          {product.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover 
+                    open={openPopovers[item.id] || false} 
+                    onOpenChange={(open) => setOpenPopovers(prev => ({ ...prev, [item.id]: open }))}
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openPopovers[item.id] || false}
+                        className="w-full justify-between"
+                        data-testid={`select-product-${item.id}`}
+                      >
+                        {item.productName || "Buscar produto..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[300px] p-0">
+                      <Command>
+                        <CommandInput placeholder="Buscar produto..." />
+                        <CommandList>
+                          <CommandEmpty>Nenhum produto encontrado.</CommandEmpty>
+                          <CommandGroup>
+                            {products.map((product) => (
+                              <CommandItem
+                                key={product.id}
+                                value={product.name}
+                                onSelect={() => handleSelectProduct(item.id, product.id)}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    item.productName === product.name ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                <div className="flex flex-col">
+                                  <span>{product.name}</span>
+                                  {product.category && (
+                                    <span className="text-xs text-muted-foreground">{product.category}</span>
+                                  )}
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div className="space-y-2">
                   <Label>Tipo</Label>
-                  <Select
-                    value={item.type}
-                    onValueChange={(value: "m2" | "fixed" | "service") => updateItem(item.id, { type: value })}
-                  >
-                    <SelectTrigger data-testid={`select-type-${item.id}`}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="m2">M²</SelectItem>
-                      <SelectItem value="fixed">Valor Fixo</SelectItem>
-                      <SelectItem value="service">Serviço</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    value={getTypeLabel(item.type)}
+                    readOnly
+                    disabled
+                    className="bg-muted"
+                    data-testid={`input-type-${item.id}`}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    O tipo vem do produto selecionado
+                  </p>
                 </div>
               </div>
 
