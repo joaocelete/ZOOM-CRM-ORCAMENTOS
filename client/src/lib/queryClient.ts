@@ -7,7 +7,25 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-export async function apiRequest(
+export async function apiRequest<T = any>(
+  url: string,
+  options: RequestInit = {},
+): Promise<T> {
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+    credentials: "include",
+  });
+
+  await throwIfResNotOk(res);
+  return await res.json();
+}
+
+// Legacy signature for backward compatibility
+export async function apiRequestRaw(
   method: string,
   url: string,
   data?: unknown | undefined,

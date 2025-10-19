@@ -1,6 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import passport from "passport";
 import { storage } from "./storage";
+import { hashPassword, ensureAuthenticated, authorizeRoles } from "./auth";
 import { 
   insertClientSchema, 
   insertProductSchema, 
@@ -12,13 +14,123 @@ import {
   insertTaskSchema,
   insertDealBudgetSchema,
   insertDealProductSchema,
-  insertCompanySettingsSchema
+  insertCompanySettingsSchema,
+  insertUserSchema,
+  loginSchema,
+  type User
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
+  // ==================== AUTHENTICATION ====================
+  app.post("/api/auth/register", ensureAuthenticated, authorizeRoles("admin"), async (req, res) => {
+    try {
+      const data = insertUserSchema.parse(req.body);
+      
+      const existingUser = await storage.getUserByEmail(data.email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Email já cadastrado" });
+      }
+
+      const passwordHash = await hashPassword(data.password);
+      
+      const user = await storage.createUser({
+        email: data.email,
+        passwordHash,
+        name: data.name,
+        role: data.role,
+        isActive: true,
+      });
+
+      const { passwordHash: _, ...userWithoutPassword } = user;
+      res.status(201).json(userWithoutPassword);
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Dados inválidos", details: error.errors });
+      }
+      res.status(500).json({ message: "Erro ao criar usuário" });
+    }
+  });
+
+  app.post("/api/auth/login", (req, res, next) => {
+    try {
+      loginSchema.parse(req.body);
+    } catch (error: any) {
+      return res.status(400).json({ message: "Dados inválidos", details: error.errors });
+    }
+
+    passport.authenticate("local", (err: any, user: User | false, info: any) => {
+      if (err) {
+        return res.status(500).json({ message: "Erro no servidor" });
+      }
+      
+      if (!user) {
+        return res.status(401).json({ message: info?.message || "Credenciais inválidas" });
+      }
+
+      req.login(user, (loginErr) => {
+        if (loginErr) {
+          return res.status(500).json({ message: "Erro ao fazer login" });
+        }
+
+        const { passwordHash: _, ...userWithoutPassword } = user;
+        res.json(userWithoutPassword);
+      });
+    })(req, res, next);
+  });
+
+  app.post("/api/auth/logout", (req, res) => {
+    req.logout((err) => {
+      if (err) {
+        return res.status(500).json({ message: "Erro ao fazer logout" });
+      }
+      res.json({ message: "Logout realizado com sucesso" });
+    });
+  });
+
+  app.get("/api/auth/me", ensureAuthenticated, (req, res) => {
+    const user = req.user as User;
+    const { passwordHash: _, ...userWithoutPassword } = user;
+    res.json(userWithoutPassword);
+  });
+
+  // ==================== USERS MANAGEMENT ====================
+  app.get("/api/users", ensureAuthenticated, authorizeRoles("admin"), async (req, res) => {
+    try {
+      const users = await storage.getUsers();
+      const usersWithoutPasswords = users.map(({ passwordHash, ...user }) => user);
+      res.json(usersWithoutPasswords);
+    } catch (error) {
+      res.status(500).json({ message: "Erro ao buscar usuários" });
+    }
+  });
+
+  app.patch("/api/users/:id", ensureAuthenticated, authorizeRoles("admin"), async (req, res) => {
+    try {
+      const user = await storage.getUser(req.params.id);
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      const updates: Partial<User> = {};
+      if (req.body.name) updates.name = req.body.name;
+      if (req.body.email) updates.email = req.body.email;
+      if (req.body.role) updates.role = req.body.role;
+      if (typeof req.body.isActive === 'boolean') updates.isActive = req.body.isActive;
+      if (req.body.password) {
+        updates.passwordHash = await hashPassword(req.body.password);
+      }
+
+      const updatedUser = await storage.updateUser(req.params.id, updates);
+      const { passwordHash: _, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      res.status(500).json({ message: "Erro ao atualizar usuário" });
+    }
+  });
+  
   // ==================== CLIENTS ====================
-  app.get("/api/clients", async (req, res) => {
+  app.get("/api/clients", ensureAuthenticated, async (req, res) => {
     try {
       const clients = await storage.getClients();
       res.json(clients);
@@ -27,7 +139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/clients/:id", async (req, res) => {
+  app.get("/api/clients/:id", ensureAuthenticated, async (req, res) => {
     try {
       const client = await storage.getClient(req.params.id);
       if (!client) {
@@ -39,7 +151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/clients", async (req, res) => {
+  app.post("/api/clients", ensureAuthenticated, async (req, res) => {
     try {
       const data = insertClientSchema.parse(req.body);
       const client = await storage.createClient(data);
@@ -49,7 +161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/clients/:id", async (req, res) => {
+  app.patch("/api/clients/:id", ensureAuthenticated, async (req, res) => {
     try {
       const existing = await storage.getClient(req.params.id);
       if (!existing) {
@@ -67,7 +179,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/clients/:id", async (req, res) => {
+  app.delete("/api/clients/:id", ensureAuthenticated, async (req, res) => {
     try {
       await storage.deleteClient(req.params.id);
       res.status(204).send();
@@ -77,7 +189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ==================== PRODUCTS ====================
-  app.get("/api/products", async (req, res) => {
+  app.get("/api/products", ensureAuthenticated, async (req, res) => {
     try {
       const products = await storage.getProducts();
       res.json(products);
@@ -86,7 +198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/products/:id", async (req, res) => {
+  app.get("/api/products/:id", ensureAuthenticated, async (req, res) => {
     try {
       const product = await storage.getProduct(req.params.id);
       if (!product) {
@@ -98,7 +210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/products", async (req, res) => {
+  app.post("/api/products", ensureAuthenticated, async (req, res) => {
     try {
       const data = insertProductSchema.parse(req.body);
       const product = await storage.createProduct(data);
@@ -108,7 +220,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/products/:id", async (req, res) => {
+  app.patch("/api/products/:id", ensureAuthenticated, async (req, res) => {
     try {
       const existing = await storage.getProduct(req.params.id);
       if (!existing) {
@@ -126,7 +238,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/products/:id", async (req, res) => {
+  app.delete("/api/products/:id", ensureAuthenticated, async (req, res) => {
     try {
       await storage.deleteProduct(req.params.id);
       res.status(204).send();
@@ -135,7 +247,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/products/:id/favorite", async (req, res) => {
+  app.patch("/api/products/:id/favorite", ensureAuthenticated, async (req, res) => {
     try {
       const existing = await storage.getProduct(req.params.id);
       if (!existing) {
@@ -152,7 +264,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ==================== BUDGETS ====================
-  app.get("/api/budgets", async (req, res) => {
+  app.get("/api/budgets, ensureAuthenticated", async (req, res) => {
     try {
       const budgets = await storage.getBudgets();
       const clients = await storage.getClients();
@@ -169,7 +281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/budgets/:id", async (req, res) => {
+  app.get("/api/budgets, ensureAuthenticated/:id", async (req, res) => {
     try {
       const budget = await storage.getBudget(req.params.id);
       if (!budget) {
@@ -181,7 +293,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/budgets/:id/items", async (req, res) => {
+  app.get("/api/budgets, ensureAuthenticated/:id/items", async (req, res) => {
     try {
       const items = await storage.getBudgetItems(req.params.id);
       res.json(items);
@@ -190,7 +302,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/budgets", async (req, res) => {
+  app.post("/api/budgets, ensureAuthenticated", async (req, res) => {
     try {
       const { items, ...budgetData } = req.body;
       const budgetParsed = insertBudgetSchema.parse(budgetData);
@@ -219,7 +331,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/budgets/:id", async (req, res) => {
+  app.patch("/api/budgets, ensureAuthenticated/:id", async (req, res) => {
     try {
       const existing = await storage.getBudget(req.params.id);
       if (!existing) {
@@ -254,7 +366,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/budgets/:id", async (req, res) => {
+  app.delete("/api/budgets, ensureAuthenticated/:id", async (req, res) => {
     try {
       await storage.deleteBudgetItems(req.params.id);
       await storage.deleteBudget(req.params.id);
@@ -265,7 +377,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ==================== DEALS (Pipeline) ====================
-  app.get("/api/deals", async (req, res) => {
+  app.get("/api/deals, ensureAuthenticated", async (req, res) => {
     try {
       const deals = await storage.getDeals();
       res.json(deals);
@@ -274,7 +386,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/deals/:id", async (req, res) => {
+  app.get("/api/deals, ensureAuthenticated/:id", async (req, res) => {
     try {
       const deal = await storage.getDeal(req.params.id);
       if (!deal) {
@@ -286,7 +398,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/deals", async (req, res) => {
+  app.post("/api/deals, ensureAuthenticated", async (req, res) => {
     try {
       const data = insertDealSchema.parse(req.body);
       const deal = await storage.createDeal(data);
@@ -304,7 +416,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/deals/:id", async (req, res) => {
+  app.patch("/api/deals, ensureAuthenticated/:id", async (req, res) => {
     try {
       const existing = await storage.getDeal(req.params.id);
       if (!existing) {
@@ -322,7 +434,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/deals/:id", async (req, res) => {
+  app.delete("/api/deals, ensureAuthenticated/:id", async (req, res) => {
     try {
       await storage.deleteDeal(req.params.id);
       res.status(204).send();
@@ -332,7 +444,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ==================== PRODUCTION ====================
-  app.get("/api/production", async (req, res) => {
+  app.get("/api/production, ensureAuthenticated", async (req, res) => {
     try {
       const productions = await storage.getProductions();
       res.json(productions);
@@ -341,7 +453,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/production/:id", async (req, res) => {
+  app.get("/api/production, ensureAuthenticated/:id", async (req, res) => {
     try {
       const production = await storage.getProduction(req.params.id);
       if (!production) {
@@ -353,7 +465,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/production", async (req, res) => {
+  app.post("/api/production, ensureAuthenticated", async (req, res) => {
     try {
       const data = insertProductionSchema.parse(req.body);
       const production = await storage.createProduction(data);
@@ -363,7 +475,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/production/:id", async (req, res) => {
+  app.patch("/api/production, ensureAuthenticated/:id", async (req, res) => {
     try {
       const existing = await storage.getProduction(req.params.id);
       if (!existing) {
@@ -381,7 +493,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/production/:id", async (req, res) => {
+  app.delete("/api/production, ensureAuthenticated/:id", async (req, res) => {
     try {
       await storage.deleteProduction(req.params.id);
       res.status(204).send();
@@ -391,7 +503,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ==================== ACTIVITIES ====================
-  app.get("/api/activities/:entityType/:entityId", async (req, res) => {
+  app.get("/api/activities, ensureAuthenticated/:entityType/:entityId", async (req, res) => {
     try {
       const { entityType, entityId } = req.params;
       const activities = await storage.getActivities(entityType, entityId);
@@ -401,7 +513,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/activities", async (req, res) => {
+  app.post("/api/activities, ensureAuthenticated", async (req, res) => {
     try {
       const data = insertActivitySchema.parse(req.body);
       const activity = await storage.createActivity(data);
@@ -411,7 +523,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/activities/:id", async (req, res) => {
+  app.delete("/api/activities, ensureAuthenticated/:id", async (req, res) => {
     try {
       await storage.deleteActivity(req.params.id);
       res.status(204).send();
@@ -421,7 +533,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ==================== TASKS ====================
-  app.get("/api/tasks/:dealId", async (req, res) => {
+  app.get("/api/tasks, ensureAuthenticated/:dealId", async (req, res) => {
     try {
       const tasks = await storage.getTasks(req.params.dealId);
       res.json(tasks);
@@ -430,7 +542,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/tasks", async (req, res) => {
+  app.post("/api/tasks, ensureAuthenticated", async (req, res) => {
     try {
       const data = insertTaskSchema.parse(req.body);
       const task = await storage.createTask(data);
@@ -440,7 +552,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/tasks/:id", async (req, res) => {
+  app.patch("/api/tasks, ensureAuthenticated/:id", async (req, res) => {
     try {
       const existing = await storage.getTask(req.params.id);
       if (!existing) {
@@ -458,7 +570,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/tasks/:id", async (req, res) => {
+  app.delete("/api/tasks, ensureAuthenticated/:id", async (req, res) => {
     try {
       await storage.deleteTask(req.params.id);
       res.status(204).send();
@@ -468,7 +580,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ==================== DEAL-BUDGETS ====================
-  app.get("/api/deal-budgets/:dealId", async (req, res) => {
+  app.get("/api/deal-budgets, ensureAuthenticated/:dealId", async (req, res) => {
     try {
       const dealBudgets = await storage.getDealBudgets(req.params.dealId);
       res.json(dealBudgets);
@@ -477,7 +589,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/deal-budgets", async (req, res) => {
+  app.post("/api/deal-budgets, ensureAuthenticated", async (req, res) => {
     try {
       const data = insertDealBudgetSchema.parse(req.body);
       const dealBudget = await storage.createDealBudget(data);
@@ -487,7 +599,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/deal-budgets/:id", async (req, res) => {
+  app.delete("/api/deal-budgets, ensureAuthenticated/:id", async (req, res) => {
     try {
       await storage.deleteDealBudget(req.params.id);
       res.status(204).send();
@@ -497,7 +609,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ==================== DEAL-PRODUCTS ====================
-  app.get("/api/deal-products/:dealId", async (req, res) => {
+  app.get("/api/deal-products, ensureAuthenticated/:dealId", async (req, res) => {
     try {
       const dealProducts = await storage.getDealProducts(req.params.dealId);
       res.json(dealProducts);
@@ -506,7 +618,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/deal-products", async (req, res) => {
+  app.post("/api/deal-products, ensureAuthenticated", async (req, res) => {
     try {
       const data = insertDealProductSchema.parse(req.body);
       const dealProduct = await storage.createDealProduct(data);
@@ -516,7 +628,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/deal-products/:id", async (req, res) => {
+  app.delete("/api/deal-products, ensureAuthenticated/:id", async (req, res) => {
     try {
       await storage.deleteDealProduct(req.params.id);
       res.status(204).send();
@@ -528,7 +640,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ==================== COMPOSITE WORKFLOWS ====================
   
   // Create budget from deal - Pre-fills budget with deal information
-  app.post("/api/deals/:dealId/create-budget", async (req, res) => {
+  app.post("/api/deals, ensureAuthenticated/:dealId/create-budget", async (req, res) => {
     try {
       const deal = await storage.getDeal(req.params.dealId);
       if (!deal) {
@@ -569,7 +681,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Approve budget - Updates deal to won and creates production
-  app.post("/api/budgets/:budgetId/approve", async (req, res) => {
+  app.post("/api/budgets, ensureAuthenticated/:budgetId/approve", async (req, res) => {
     try {
       const budget = await storage.getBudget(req.params.budgetId);
       if (!budget) {
@@ -638,7 +750,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Move deal to next stage with activity log
-  app.post("/api/deals/:dealId/move-stage", async (req, res) => {
+  app.post("/api/deals, ensureAuthenticated/:dealId/move-stage", async (req, res) => {
     try {
       const { stage } = req.body;
       const deal = await storage.getDeal(req.params.dealId);
@@ -679,7 +791,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ==================== COMPANY SETTINGS ====================
-  app.get("/api/settings", async (req, res) => {
+  app.get("/api/settings", ensureAuthenticated, async (req, res) => {
     try {
       const settings = await storage.getCompanySettings();
       res.json(settings || {
@@ -699,7 +811,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/settings", async (req, res) => {
+  app.put("/api/settings", ensureAuthenticated, authorizeRoles("admin"), async (req, res) => {
     try {
       const data = insertCompanySettingsSchema.parse(req.body);
       const settings = await storage.updateCompanySettings(data);

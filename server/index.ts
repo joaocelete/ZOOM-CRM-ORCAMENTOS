@@ -1,10 +1,73 @@
 import express, { type Request, Response, NextFunction } from "express";
+import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
+import passport from "passport";
+import pg from "pg";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { setupPassport } from "./auth";
+import { storage } from "./storage";
+
+const { Pool } = pg;
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+const PgSession = connectPgSimple(session);
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+app.set("trust proxy", 1);
+
+app.use(
+  session({
+    store: new PgSession({
+      pool,
+      tableName: "session",
+      createTableIfMissing: true,
+    }),
+    secret: process.env.SESSION_SECRET || "zoom-crm-secret-key-change-in-production",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      sameSite: "lax",
+    },
+    rolling: true,
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+setupPassport(storage);
+
+async function seedInitialAdmin() {
+  try {
+    const existingAdmin = await storage.getUserByEmail("admin@zoom.com");
+    if (!existingAdmin) {
+      const bcrypt = await import("bcrypt");
+      const passwordHash = await bcrypt.hash("admin123", 12);
+      await storage.createUser({
+        email: "admin@zoom.com",
+        passwordHash,
+        name: "Administrador",
+        role: "admin",
+        isActive: true,
+      });
+      log("Initial admin user created: admin@zoom.com / admin123");
+    }
+  } catch (error) {
+    log("Error seeding initial admin:", error);
+  }
+}
+
+seedInitialAdmin();
 
 app.use((req, res, next) => {
   const start = Date.now();

@@ -39,11 +39,16 @@ import {
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
 
+type UserCreateData = Omit<User, "id" | "createdAt" | "lastLoginAt">;
+
 export interface IStorage {
   // Users
   getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  getUsers(): Promise<User[]>;
+  createUser(user: UserCreateData): Promise<User>;
+  updateUser(id: string, user: Partial<User>): Promise<User>;
+  updateUserLastLogin(id: string): Promise<void>;
   
   // Clients
   getClients(): Promise<Client[]>;
@@ -119,14 +124,34 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
     return user || undefined;
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
+  async getUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(desc(users.createdAt));
+  }
+
+  async createUser(userData: UserCreateData): Promise<User> {
+    const [user] = await db.insert(users).values(userData).returning();
     return user;
+  }
+
+  async updateUser(id: string, updateData: Partial<User>): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set(updateData)
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async updateUserLastLogin(id: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ lastLoginAt: new Date() })
+      .where(eq(users.id, id));
   }
 
   // Clients
