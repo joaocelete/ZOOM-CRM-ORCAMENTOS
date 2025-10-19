@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Pencil, Trash2, CopyPlus, MoreVertical } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, CopyPlus, MoreVertical, Star } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -31,9 +31,10 @@ interface ProductListProps {
   onEdit?: (product: Product) => void;
   onDelete?: (id: string) => void;
   onAdd?: () => void;
+  onToggleFavorite?: (id: string) => void;
 }
 
-export function ProductList({ products, onEdit, onDelete, onAdd }: ProductListProps) {
+export function ProductList({ products, onEdit, onDelete, onAdd, onToggleFavorite }: ProductListProps) {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -54,6 +55,10 @@ export function ProductList({ products, onEdit, onDelete, onAdd }: ProductListPr
   });
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
+    // Favoritos sempre primeiro
+    if (a.isFavorite && !b.isFavorite) return -1;
+    if (!a.isFavorite && b.isFavorite) return 1;
+    
     if (sortBy === "price") {
       const priceA = Number(a.fixedPrice || a.pricePerM2 || 0);
       const priceB = Number(b.fixedPrice || b.pricePerM2 || 0);
@@ -140,12 +145,13 @@ export function ProductList({ products, onEdit, onDelete, onAdd }: ProductListPr
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[260px]">Produto</TableHead>
+              <TableHead className="w-[50px]"></TableHead>
+              <TableHead className="w-[220px]">Produto</TableHead>
               <TableHead>Categoria</TableHead>
               <TableHead>Tipo</TableHead>
               <TableHead>Preço</TableHead>
               <TableHead>Prazo produção</TableHead>
-              <TableHead className="w-[140px] text-center">Ações</TableHead>
+              <TableHead className="w-[80px] text-center">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -156,6 +162,23 @@ export function ProductList({ products, onEdit, onDelete, onAdd }: ProductListPr
                 className="cursor-pointer hover:bg-muted/70"
                 onClick={() => onEdit?.(product)}
               >
+                <TableCell onClick={(e) => e.stopPropagation()}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onToggleFavorite?.(product.id)}
+                    data-testid={`button-favorite-${product.id}`}
+                    className="h-8 w-8"
+                  >
+                    <Star
+                      className={`h-4 w-4 ${
+                        product.isFavorite
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "text-muted-foreground"
+                      }`}
+                    />
+                  </Button>
+                </TableCell>
                 <TableCell>
                   <div className="flex flex-col gap-1">
                     <span className="font-medium">{product.name}</span>
@@ -235,7 +258,7 @@ export function ProductList({ products, onEdit, onDelete, onAdd }: ProductListPr
 
             {sortedProducts.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
                   Nenhum produto encontrado
                 </TableCell>
               </TableRow>

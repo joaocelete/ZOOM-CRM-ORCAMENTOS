@@ -23,6 +23,15 @@ export default function Produtos() {
     },
   });
 
+  const toggleFavoriteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("PATCH", `/api/products/${id}/favorite`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+    },
+  });
+
   const handleAdd = () => {
     setSelectedProduct(undefined);
     setDialogMode("add");
@@ -58,6 +67,7 @@ export default function Produtos() {
         onEdit={handleEdit}
         onDelete={(id) => deleteMutation.mutate(id)}
         onAdd={handleAdd}
+        onToggleFavorite={(id) => toggleFavoriteMutation.mutate(id)}
       />
 
       <ProductDialog
