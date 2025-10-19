@@ -7,10 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Settings as SettingsIcon, Upload, Save, Building2, FileCode } from "lucide-react";
+import { Settings as SettingsIcon, Upload, Save, Building2, FileCode, Eye, ChevronDown, ChevronUp } from "lucide-react";
 import { ImageCropDialog } from "@/components/image-crop-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { DEFAULT_PDF_TEMPLATE } from "@/lib/default-pdf-template";
+import { PREVIEW_DATA } from "@/lib/pdf-preview-data";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 export default function Settings() {
   const { toast } = useToast();
@@ -37,6 +39,8 @@ export default function Settings() {
   const [logoPreview, setLogoPreview] = useState<string>("");
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [imageToCrop, setImageToCrop] = useState<string>("");
+  const [previewHtml, setPreviewHtml] = useState<string>("");
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   // Update form when settings load
   useEffect(() => {
@@ -125,6 +129,85 @@ export default function Settings() {
       title: "Logo recortado!",
       description: "Não esqueça de salvar as configurações.",
     });
+  };
+
+  // Simple template compiler for preview (same logic as html-pdf-generator)
+  const compileTemplate = (template: string, data: Record<string, any>): string => {
+    let result = template;
+    
+    const processConditionals = (content: string, context: Record<string, any>): string => {
+      let result = content;
+      let previousResult = '';
+      
+      while (result !== previousResult) {
+        previousResult = result;
+        result = result.replace(/\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g, (_, varName, innerContent) => {
+          if (context[varName]) {
+            return processConditionals(innerContent, context);
+          }
+          return '';
+        });
+      }
+      
+      return result;
+    };
+    
+    const replaceVariables = (content: string, context: Record<string, any>): string => {
+      let processedContent = content;
+      Object.keys(context).forEach(key => {
+        const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+        processedContent = processedContent.replace(regex, context[key] || '');
+      });
+      return processedContent;
+    };
+    
+    result = result.replace(/\{\{#each\s+(\w+)\}\}([\s\S]*?)\{\{\/each\}\}/g, (_, varName, content) => {
+      const items = data[varName] || [];
+      return items.map((item: any) => {
+        let itemContent = content;
+        itemContent = processConditionals(itemContent, item);
+        itemContent = replaceVariables(itemContent, item);
+        return itemContent;
+      }).join('');
+    });
+    
+    result = processConditionals(result, data);
+    result = replaceVariables(result, data);
+    
+    return result;
+  };
+
+  const handleGeneratePreview = () => {
+    try {
+      const previewDataWithLogo = {
+        ...PREVIEW_DATA,
+        logo: logoPreview || formData.logo,
+        companyName: formData.companyName || PREVIEW_DATA.companyName,
+        cnpj: formData.cnpj || PREVIEW_DATA.cnpj,
+        address: formData.address || PREVIEW_DATA.address,
+        city: formData.city || PREVIEW_DATA.city,
+        state: formData.state || PREVIEW_DATA.state,
+        phone: formData.phone || PREVIEW_DATA.phone,
+        email: formData.email || PREVIEW_DATA.email,
+        website: formData.website || PREVIEW_DATA.website,
+      };
+
+      const compiled = compileTemplate(formData.pdfTemplate, previewDataWithLogo);
+      setPreviewHtml(compiled);
+      setPreviewOpen(true);
+
+      toast({
+        title: "Preview atualizado!",
+        description: "Visualize o resultado abaixo.",
+      });
+    } catch (error) {
+      console.error("Erro ao gerar preview:", error);
+      toast({
+        title: "Erro ao gerar preview",
+        description: "Verifique se o template HTML está correto.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -377,6 +460,53 @@ export default function Settings() {
                 {`{{deliveryTime}}`}, {`{{observations}}`}
               </p>
             </div>
+
+            {/* Preview Button */}
+            <div className="flex justify-center pt-2">
+              <Button
+                type="button"
+                variant="default"
+                onClick={handleGeneratePreview}
+                data-testid="button-preview-template"
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                Atualizar Preview
+              </Button>
+            </div>
+
+            {/* Preview Area */}
+            {previewHtml && (
+              <Collapsible open={previewOpen} onOpenChange={setPreviewOpen}>
+                <CollapsibleTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full flex items-center justify-between"
+                    data-testid="button-toggle-preview"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Eye className="h-4 w-4" />
+                      Visualização do PDF
+                    </span>
+                    {previewOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-4">
+                  <div className="border rounded-lg overflow-hidden bg-white">
+                    <iframe
+                      srcDoc={previewHtml}
+                      className="w-full h-[800px]"
+                      title="PDF Preview"
+                      sandbox="allow-same-origin"
+                      data-testid="iframe-pdf-preview"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2 text-center">
+                    Esta é uma visualização do PDF. Salve as configurações e gere um PDF real em "Orçamentos" para o arquivo final.
+                  </p>
+                </CollapsibleContent>
+              </Collapsible>
+            )}
           </CardContent>
         </Card>
 
