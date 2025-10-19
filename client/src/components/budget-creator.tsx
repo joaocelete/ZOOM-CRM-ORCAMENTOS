@@ -446,7 +446,14 @@ export function BudgetCreator({ clients = [], products = [], existingBudget, bud
                         <CommandList>
                           <CommandEmpty>Nenhum produto encontrado.</CommandEmpty>
                           <CommandGroup>
-                            {products.map((product) => (
+                            {[...products]
+                              .sort((a, b) => {
+                                // Favoritos sempre primeiro
+                                if (a.isFavorite && !b.isFavorite) return -1;
+                                if (!a.isFavorite && b.isFavorite) return 1;
+                                return a.name.localeCompare(b.name);
+                              })
+                              .map((product) => (
                               <CommandItem
                                 key={product.id}
                                 value={product.name}
