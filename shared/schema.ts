@@ -166,6 +166,7 @@ export const companySettings = pgTable("company_settings", {
   email: text("email"),
   website: text("website"),
   logo: text("logo"), // base64 encoded image
+  pdfTemplate: text("pdf_template"), // HTML template for PDF generation
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
