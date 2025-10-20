@@ -1,25 +1,37 @@
 import { Link, useLocation } from "wouter";
 import { LayoutDashboard, Users, FileText, KanbanSquare, Package, ClipboardList } from "lucide-react";
+import { usePermissions } from "@/hooks/use-permissions";
 
 const navItems = [
-  { path: "/", icon: LayoutDashboard, label: "Dashboard" },
-  { path: "/clientes", icon: Users, label: "Clientes" },
-  { path: "/orcamentos", icon: FileText, label: "Orçamentos" },
-  { path: "/pipeline", icon: KanbanSquare, label: "Pipeline" },
-  { path: "/produtos", icon: Package, label: "Produtos" },
-  { path: "/producao", icon: ClipboardList, label: "Produção" },
+  { path: "/", icon: LayoutDashboard, label: "Dashboard", permission: "dashboard" as const },
+  { path: "/clientes", icon: Users, label: "Clientes", permission: "clientes" as const },
+  { path: "/orcamentos", icon: FileText, label: "Orçamentos", permission: "orcamentos" as const },
+  { path: "/pipeline", icon: KanbanSquare, label: "Pipeline", permission: "pipeline" as const },
+  { path: "/produtos", icon: Package, label: "Produtos", permission: "produtos" as const },
+  { path: "/producao", icon: ClipboardList, label: "Produção", permission: "producao" as const },
 ];
 
 export default function BottomNavigation() {
   const [location] = useLocation();
+  const { hasPermission } = usePermissions();
+
+  // Filtrar itens de navegação baseado nas permissões
+  const visibleNavItems = navItems.filter((item) => hasPermission(item.permission));
+
+  // Se não há itens visíveis, não mostra a navegação
+  if (visibleNavItems.length === 0) {
+    return null;
+  }
 
   return (
     <nav 
       className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t z-50 safe-area-pb"
       data-testid="bottom-navigation"
     >
-      <div className="grid grid-cols-6 h-16">
-        {navItems.map((item) => {
+      <div className="flex h-16"
+        style={{ display: 'grid', gridTemplateColumns: `repeat(${visibleNavItems.length}, minmax(0, 1fr))` }}
+      >
+        {visibleNavItems.map((item) => {
           const isActive = location === item.path;
           const Icon = item.icon;
           

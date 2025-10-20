@@ -117,6 +117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.body.email) updates.email = req.body.email;
       if (req.body.role) updates.role = req.body.role;
       if (typeof req.body.isActive === 'boolean') updates.isActive = req.body.isActive;
+      if (req.body.permissions) updates.permissions = req.body.permissions;
       if (req.body.password) {
         updates.passwordHash = await hashPassword(req.body.password);
       }
@@ -126,6 +127,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(userWithoutPassword);
     } catch (error) {
       res.status(500).json({ message: "Erro ao atualizar usuário" });
+    }
+  });
+
+  app.delete("/api/users/:id", ensureAuthenticated, authorizeRoles("admin"), async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const currentUser = req.user as User;
+
+      // Prevent users from deleting themselves
+      if (userId === currentUser.id) {
+        return res.status(400).json({ message: "Você não pode deletar sua própria conta" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      await storage.deleteUser(userId);
+      res.json({ message: "Usuário deletado com sucesso" });
+    } catch (error) {
+      res.status(500).json({ message: "Erro ao deletar usuário" });
     }
   });
   

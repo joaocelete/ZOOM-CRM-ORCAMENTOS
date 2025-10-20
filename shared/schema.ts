@@ -10,6 +10,7 @@ export const users = pgTable("users", {
   name: text("name").notNull(),
   role: text("role").notNull().default("employee"), // 'admin', 'salesperson', 'employee'
   isActive: boolean("is_active").notNull().default(true),
+  permissions: text("permissions"), // JSON string: {dashboard, clientes, orcamentos, pipeline, produtos, producao, settings, users}
   createdAt: timestamp("created_at").defaultNow(),
   lastLoginAt: timestamp("last_login_at"),
 });
@@ -176,6 +177,18 @@ export const companySettings = pgTable("company_settings", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Permissions schema
+export const userPermissionsSchema = z.object({
+  dashboard: z.boolean().default(true),
+  clientes: z.boolean().default(true),
+  orcamentos: z.boolean().default(true),
+  pipeline: z.boolean().default(true),
+  produtos: z.boolean().default(true),
+  producao: z.boolean().default(true),
+  settings: z.boolean().default(false),
+  users: z.boolean().default(false),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users)
   .omit({ id: true, createdAt: true, lastLoginAt: true, passwordHash: true })
@@ -184,7 +197,17 @@ export const insertUserSchema = createInsertSchema(users)
     password: z.string().min(8, "Senha deve ter no mínimo 8 caracteres"),
     name: z.string().min(2, "Nome deve ter no mínimo 2 caracteres"),
     role: z.enum(["admin", "salesperson", "employee"]).default("employee"),
+    permissions: z.string().optional(), // JSON string
   });
+
+export const updateUserSchema = z.object({
+  email: z.string().email("Email inválido").optional(),
+  password: z.string().min(8, "Senha deve ter no mínimo 8 caracteres").optional(),
+  name: z.string().min(2, "Nome deve ter no mínimo 2 caracteres").optional(),
+  role: z.enum(["admin", "salesperson", "employee"]).optional(),
+  isActive: z.boolean().optional(),
+  permissions: z.string().optional(), // JSON string
+});
 
 export const loginSchema = z.object({
   email: z.string().email("Email inválido"),

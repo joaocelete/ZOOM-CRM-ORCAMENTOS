@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
 import { Navbar } from "@/components/navbar";
 import BottomNavigation from "@/components/bottom-navigation";
+import { PermissionGuard } from "@/components/permission-guard";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Clientes from "@/pages/clientes";
@@ -70,56 +71,76 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/clientes">
         <AuthenticatedLayout>
-          <Clientes />
+          <PermissionGuard permission="clientes">
+            <Clientes />
+          </PermissionGuard>
         </AuthenticatedLayout>
       </Route>
       <Route path="/client/:id/timeline">
         {(params) => (
           <AuthenticatedLayout>
-            <ClientTimeline />
+            <PermissionGuard permission="clientes">
+              <ClientTimeline />
+            </PermissionGuard>
           </AuthenticatedLayout>
         )}
       </Route>
       <Route path="/orcamentos">
         <AuthenticatedLayout>
-          <Orcamentos />
+          <PermissionGuard permission="orcamentos">
+            <Orcamentos />
+          </PermissionGuard>
         </AuthenticatedLayout>
       </Route>
       <Route path="/pipeline">
         <AuthenticatedLayout>
-          <Pipeline />
+          <PermissionGuard permission="pipeline">
+            <Pipeline />
+          </PermissionGuard>
         </AuthenticatedLayout>
       </Route>
       <Route path="/deal/:id">
         {(params) => (
           <AuthenticatedLayout>
-            <DealWorkspace />
+            <PermissionGuard permission="pipeline">
+              <DealWorkspace />
+            </PermissionGuard>
           </AuthenticatedLayout>
         )}
       </Route>
       <Route path="/produtos">
         <AuthenticatedLayout>
-          <Produtos />
+          <PermissionGuard permission="produtos">
+            <Produtos />
+          </PermissionGuard>
         </AuthenticatedLayout>
       </Route>
       <Route path="/producao">
         <AuthenticatedLayout>
-          <Producao />
+          <PermissionGuard permission="producao">
+            <Producao />
+          </PermissionGuard>
         </AuthenticatedLayout>
       </Route>
       <Route path="/users">
         <AuthenticatedLayout>
-          <Users />
+          <PermissionGuard permission="users">
+            <Users />
+          </PermissionGuard>
         </AuthenticatedLayout>
       </Route>
       <Route path="/settings">
         <AuthenticatedLayout>
-          <Settings />
+          <PermissionGuard permission="settings">
+            <Settings />
+          </PermissionGuard>
         </AuthenticatedLayout>
       </Route>
       <Route path="/">
         <AuthenticatedLayout>
-          <Dashboard />
+          <PermissionGuard permission="dashboard">
+            <Dashboard />
+          </PermissionGuard>
         </AuthenticatedLayout>
       </Route>
       <Route>
